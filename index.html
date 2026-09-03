@@ -942,6 +942,7 @@ async function openCompare(){
               Bens declarados: ${fmtMoeda(candidato.bens_declarados_total) || '—'}<br>
               Assiduidade: ${ativ ? ativ.assiduidade_pct + '%' : 'ainda não disponível'}<br>
               Proposições apresentadas: ${ativ ? ativ.projetos_apresentados : 'ainda não disponível'}<br>
+              Proposições aprovadas: ${ativ && ativ.projetos_aprovados != null ? ativ.projetos_aprovados : 'ainda não verificado'}<br>
               Total arrecadado (campanha): ${totalArrecadado ? fmtMoeda(totalArrecadado) : 'ainda não disponível'}
             </p>
           </div>
@@ -1000,7 +1001,8 @@ async function openDossie(candidatoId){
             <p style="font-size:13px;">${ativ.nota_metodologica || ''}</p>
             <p class="mono" style="font-size:12.5px;">
               Assiduidade estimada: ${ativ.assiduidade_pct != null ? ativ.assiduidade_pct + '%' : '—'} (${ativ.periodo_referencia || ''})<br>
-              Proposições apresentadas: ${ativ.projetos_apresentados ?? '—'} <span style="color:var(--ink-soft)">(inclui requerimentos e indicações, não só projetos de lei)</span>
+              Proposições apresentadas: ${ativ.projetos_apresentados ?? '—'} <span style="color:var(--ink-soft)">(inclui requerimentos e indicações, não só projetos de lei)</span><br>
+              Proposições aprovadas: ${ativ.projetos_aprovados ?? 'ainda não verificado'} <span style="color:var(--ink-soft)">(estimativa por palavra-chave — ver nota abaixo)</span>
             </p>
             <div class="cpf-note" style="font-size:11px;color:var(--ink-soft);margin-top:4px;">Fonte: ${ativ.fonte_url || '—'}</div>
           ` : `<p class="indisponivel">Dado ainda não disponível para este candidato — ou porque não tem mandato parlamentar atual, ou porque a sincronização com Câmara/Senado ainda está em andamento.</p>`}
