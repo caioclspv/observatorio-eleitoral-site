@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Changelog e contestação — Observatório Eleitoral 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --tinta:#12181A; --tela:#E7F0EA; --papel:#FFFFFF; --linha:#D3E0D8; --ink-soft:#4E5D56;
+    --confirma:#0E8A4D; --confirma-bg:#E1F2E7; --verified:#0E8A4D;
+    --pending:#C67B22; --pending-bg:#F7E9D6;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--tela);color:var(--tinta);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;line-height:1.65;}
+  h1,h2,h3,h4{font-family:'Outfit',sans-serif;font-weight:700;color:var(--tinta);}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  .auth-bar{background:#0B100F;border-bottom:1px solid #1E2924;}
+  .auth-bar-inner{max-width:1180px;margin:0 auto;padding:8px 32px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+  .site-wordmark{display:flex;align-items:center;gap:10px;text-decoration:none;}
+  .site-wordmark .marca{width:8px;height:8px;border-radius:50%;background:var(--verified);flex-shrink:0;}
+  .site-wordmark span{color:#EAF3EC;font-family:'Outfit',sans-serif;font-weight:700;font-size:13px;letter-spacing:.01em;}
+  .site-nav{display:flex;gap:18px;align-items:center;}
+  .site-nav a{color:#9FC7AE;font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-decoration:none;padding:6px 2px;}
+  .site-nav a:hover{color:#fff;}
+  .site-nav a.atual{color:#fff;border-bottom:2px solid var(--verified);}
+
+  main{max-width:820px;margin:0 auto;padding:24px 32px 80px;background:var(--papel);border-radius:16px;margin-top:20px;
+    box-shadow:0 1px 3px rgba(18,24,26,.06);}
+  h1{font-size:28px;margin-bottom:4px;}
+  h2{font-size:20px;margin-top:36px;border-bottom:2px solid var(--confirma);padding-bottom:6px;}
+  h3{font-size:16px;color:var(--ink-soft);font-weight:500;margin-top:0;}
+  hr{border:none;border-top:1px solid var(--linha);margin:24px 0;}
+  a{color:var(--confirma);}
+  p.aviso{font-size:13px;color:var(--ink-soft);background:var(--tela);border-radius:8px;padding:12px 14px;}
+
+  label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin:16px 0 6px;}
+  input[type=text], input[type=email], select, textarea{width:100%;padding:11px 13px;border:1px solid var(--linha);border-radius:8px;
+    font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;background:#fff;}
+  textarea{min-height:100px;resize:vertical;}
+  .busca-wrap{position:relative;}
+  .busca-resultados{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--linha);border-radius:0 0 8px 8px;
+    max-height:220px;overflow-y:auto;z-index:10;box-shadow:0 12px 24px rgba(18,24,26,.12);}
+  .busca-item{padding:10px 13px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--linha);}
+  .busca-item:hover{background:var(--tela);}
+  .candidato-selecionado{display:none;background:var(--confirma-bg);color:var(--confirma);border-radius:8px;padding:10px 13px;
+    font-size:13.5px;margin-top:6px;align-items:center;justify-content:space-between;}
+  .candidato-selecionado.mostrando{display:flex;}
+  .candidato-selecionado button{background:none;border:none;color:inherit;cursor:pointer;font-size:12px;text-decoration:underline;}
+
+  .btn{background:var(--confirma);color:#fff;border:none;border-radius:8px;padding:13px 20px;font-family:'Outfit',sans-serif;
+    font-weight:600;font-size:15px;cursor:pointer;margin-top:18px;}
+  .btn:hover{filter:brightness(1.08);}
+  .btn:disabled{opacity:.6;cursor:default;}
+  .form-msg{margin-top:12px;font-size:13.5px;padding:10px 13px;border-radius:8px;display:none;}
+  .form-msg.ok{display:block;background:var(--confirma-bg);color:var(--confirma);}
+  .form-msg.erro{display:block;background:#FBE7E5;color:#C23B34;}
+
+  .item{border-left:3px solid var(--confirma);padding:10px 0 10px 14px;margin-bottom:14px;}
+  .item .meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);margin-bottom:4px;}
+  .item .campo{font-family:'Outfit',sans-serif;font-weight:600;font-size:14.5px;}
+  .item .mensagem{font-size:13.5px;margin:6px 0;color:var(--ink-soft);}
+  .item .resposta{font-size:13.5px;background:var(--tela);border-radius:6px;padding:8px 10px;margin-top:6px;}
+  .vazio{font-size:13.5px;color:var(--ink-soft);font-style:italic;}
+  .loading{font-size:13px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+  @media(max-width:760px){main{padding:20px 18px 60px;margin:12px;}}
+</style>
+</head>
+<body>
+<div class="auth-bar">
+  <div class="auth-bar-inner">
+    <a href="index.html" class="site-wordmark"><span class="marca"></span><span>OBSERVATÓRIO ELEITORAL</span></a>
+    <nav class="site-nav">
+      <a href="index.html">Início</a>
+      <a href="metodologia.html">Metodologia</a>
+      <a href="changelog.html" class="atual">Changelog</a>
+    </nav>
+  </div>
+</div>
+<main>
+<h1>Changelog e contestação</h1>
+<h3>Auditoria pública de dados e canal para reportar erro</h3>
+<hr />
+
+<p class="aviso">
+  A maior parte dos dados deste site vem direto das fontes oficiais (TSE,
+  Câmara, Senado) sem etapa de classificação humana no meio — ver
+  <a href="metodologia.html">metodologia.html §3.3</a>. Por isso não há um
+  "changelog" tradicional linha a linha para todo campo. O que existe aqui:
+  contestações públicas já respondidas, e o histórico de auditoria da fila
+  de revisão de imprensa (quando ativa).
+</p>
+
+<h2>Contestar um dado</h2>
+<p style="font-size:13.5px;color:var(--ink-soft);">Encontrou algo errado na ficha de um candidato? Registre aqui — checamos e respondemos aqui mesmo nesta página.</p>
+
+<label for="buscaCandidato">Candidato</label>
+<div class="busca-wrap">
+  <input type="text" id="buscaCandidato" placeholder="Digite o nome ou partido…" autocomplete="off">
+  <div class="busca-resultados" id="buscaResultados" hidden></div>
+</div>
+<div class="candidato-selecionado" id="candidatoSelecionado">
+  <span id="candidatoSelecionadoLabel"></span>
+  <button type="button" onclick="limparSelecao()">trocar</button>
+</div>
+
+<label for="campoContestado">Qual dado está errado?</label>
+<select id="campoContestado">
+  <option value="Identidade / partido / número de urna">Identidade / partido / número de urna</option>
+  <option value="Bens declarados">Bens declarados</option>
+  <option value="Ficha Limpa (situação de registro)">Ficha Limpa (situação de registro)</option>
+  <option value="Assiduidade / atividade legislativa">Assiduidade / atividade legislativa</option>
+  <option value="Financiamento de campanha">Financiamento de campanha</option>
+  <option value="Proposta de governo">Proposta de governo</option>
+  <option value="Foto">Foto</option>
+  <option value="Outro">Outro</option>
+</select>
+
+<label for="mensagemContestacao">Descreva o problema</label>
+<textarea id="mensagemContestacao" placeholder="O que está errado e, se possível, qual a fonte correta…"></textarea>
+
+<label for="contatoContestacao">Seu e-mail (opcional, só se quiser resposta direta)</label>
+<input type="email" id="contatoContestacao" placeholder="seu@email.com">
+
+<button class="btn" id="btnEnviarContestacao">Registrar contestação</button>
+<div class="form-msg" id="formMsg"></div>
+
+<hr />
+<h2>Contestações respondidas</h2>
+<div id="listaContestacoes"><div class="loading">Carregando…</div></div>
+
+<h2>Auditoria — fila de revisão de imprensa</h2>
+<p style="font-size:12.5px;color:var(--ink-soft);">Registrado sempre que um item entra, é aprovado, rejeitado ou contestado na fila de revisão de dados de imprensa (ver <a href="metodologia.html">metodologia.html §3.5</a>). Vazio aqui não significa que nada foi verificado — significa que essa fila específica ainda não processou nada.</p>
+<div id="listaAuditoria"><div class="loading">Carregando…</div></div>
+
+</main>
+<script>
+const sb = supabase.createClient(
+  "https://rnuikbvpagddhwxvgzdd.supabase.co",
+  "sb_publishable_Xf5mg25tuP_PX0QzZnzI1w_BvxZuclp"
+);
+
+let candidatoSelecionadoId = null;
+let debounceBusca = null;
+
+function fmtDataHoraBr(iso){
+  if (!iso) return '';
+  return new Date(iso).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+document.getElementById('buscaCandidato').addEventListener('input', (e) => {
+  clearTimeout(debounceBusca);
+  const termo = e.target.value.trim();
+  const resultadosEl = document.getElementById('buscaResultados');
+  if (termo.length < 2){ resultadosEl.hidden = true; return; }
+  debounceBusca = setTimeout(async () => {
+    const { data, error } = await sb.from('candidatos')
+      .select('candidato_id, nome_urna, partido, uf, cargo')
+      .or(`nome_urna.ilike.%${termo}%,partido.ilike.%${termo}%`)
+      .limit(8);
+    if (error || !data || data.length === 0){ resultadosEl.hidden = true; return; }
+    resultadosEl.innerHTML = data.map(c =>
+      `<div class="busca-item" data-id="${c.candidato_id}" data-label="${c.nome_urna} (${c.partido || '—'} · ${c.uf})">${c.nome_urna} — ${c.partido || '—'} · ${c.uf} · ${c.cargo}</div>`
+    ).join('');
+    resultadosEl.hidden = false;
+    resultadosEl.querySelectorAll('.busca-item').forEach(el => {
+      el.addEventListener('click', () => selecionarCandidato(el.dataset.id, el.dataset.label));
+    });
+  }, 300);
+});
+
+function selecionarCandidato(id, label){
+  candidatoSelecionadoId = id;
+  document.getElementById('buscaCandidato').value = '';
+  document.getElementById('buscaResultados').hidden = true;
+  document.getElementById('candidatoSelecionadoLabel').textContent = label;
+  document.getElementById('candidatoSelecionado').classList.add('mostrando');
+}
+function limparSelecao(){
+  candidatoSelecionadoId = null;
+  document.getElementById('candidatoSelecionado').classList.remove('mostrando');
+}
+
+document.getElementById('btnEnviarContestacao').addEventListener('click', async () => {
+  const msgEl = document.getElementById('formMsg');
+  msgEl.className = 'form-msg';
+  const mensagem = document.getElementById('mensagemContestacao').value.trim();
+  const campo = document.getElementById('campoContestado').value;
+  const contato = document.getElementById('contatoContestacao').value.trim();
+
+  if (!candidatoSelecionadoId){
+    msgEl.textContent = 'Selecione o candidato na busca acima antes de enviar.';
+    msgEl.classList.add('erro');
+    return;
+  }
+  if (mensagem.length < 10){
+    msgEl.textContent = 'Descreva o problema com um pouco mais de detalhe (mínimo 10 caracteres).';
+    msgEl.classList.add('erro');
+    return;
+  }
+
+  const btn = document.getElementById('btnEnviarContestacao');
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+
+  const { error } = await sb.from('contestacoes').insert({
+    candidato_id: candidatoSelecionadoId,
+    campo,
+    mensagem,
+    contato: contato || null,
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Registrar contestação';
+
+  if (error){
+    msgEl.textContent = 'Não foi possível registrar agora: ' + error.message;
+    msgEl.classList.add('erro');
+    return;
+  }
+  msgEl.textContent = 'Contestação registrada. Ela aparece na lista pública assim que for respondida.';
+  msgEl.classList.add('ok');
+  document.getElementById('mensagemContestacao').value = '';
+  document.getElementById('contatoContestacao').value = '';
+  limparSelecao();
+});
+
+async function carregarContestacoesRespondidas(){
+  const el = document.getElementById('listaContestacoes');
+  const { data, error } = await sb.from('contestacoes')
+    .select('candidato_id, campo, mensagem, resposta, criado_em, respondido_em, candidatos(nome_urna)')
+    .eq('status', 'respondida')
+    .order('respondido_em', { ascending: false })
+    .limit(50);
+
+  if (error){ el.innerHTML = `<p class="vazio">Não foi possível carregar agora.</p>`; return; }
+  if (!data || data.length === 0){ el.innerHTML = `<p class="vazio">Nenhuma contestação respondida publicamente ainda.</p>`; return; }
+
+  el.innerHTML = data.map(c => `
+    <div class="item">
+      <div class="meta">${c.candidatos ? c.candidatos.nome_urna : c.candidato_id} · respondido em ${fmtDataHoraBr(c.respondido_em)}</div>
+      <div class="campo">${c.campo}</div>
+      <div class="mensagem">${c.mensagem}</div>
+      <div class="resposta"><strong>Resposta:</strong> ${c.resposta || '—'}</div>
+    </div>`).join('');
+}
+
+async function carregarAuditoria(){
+  const el = document.getElementById('listaAuditoria');
+  const { data, error } = await sb.from('auditoria')
+    .select('acao, detalhe, quando, fila_revisao(candidato_id, tipo_dado)')
+    .order('quando', { ascending: false })
+    .limit(50);
+
+  if (error){ el.innerHTML = `<p class="vazio">Não foi possível carregar agora.</p>`; return; }
+  if (!data || data.length === 0){ el.innerHTML = `<p class="vazio">Nenhum registro de auditoria pública ainda.</p>`; return; }
+
+  el.innerHTML = data.map(a => `
+    <div class="item">
+      <div class="meta">${fmtDataHoraBr(a.quando)}${a.fila_revisao ? ' · ' + a.fila_revisao.candidato_id + ' · ' + a.fila_revisao.tipo_dado : ''}</div>
+      <div class="campo">${a.acao}</div>
+      ${a.detalhe ? `<div class="mensagem">${a.detalhe}</div>` : ''}
+    </div>`).join('');
+}
+
+(function preencherDaUrl(){
+  const params = new URLSearchParams(window.location.search);
+  const candidatoId = params.get('candidato');
+  if (!candidatoId) return;
+  sb.from('candidatos').select('candidato_id, nome_urna, partido, uf').eq('candidato_id', candidatoId).single()
+    .then(({ data }) => { if (data) selecionarCandidato(data.candidato_id, `${data.nome_urna} (${data.partido || '—'} · ${data.uf})`); });
+})();
+
+carregarContestacoesRespondidas();
+carregarAuditoria();
+</script>
+</body>
+</html>

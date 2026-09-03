@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Observatório Eleitoral 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --tinta:#12181A; --tela:#E7F0EA; --papel:#FFFFFF; --linha:#D3E0D8; --ink-soft:#4E5D56;
+    --verified:#0E8A4D; --verified-bg:#E1F2E7;
+    --pending:#C67B22; --pending-bg:#F7E9D6;
+    --confirmed:#C23B34; --confirmed-bg:#FBE7E5;
+    --accent:#0E8A4D; --accent-bg:#E1F2E7;
+    --radius:10px;
+    --paper:var(--tela); --paper-2:#DCEAE2; --ink:var(--tinta); --line:var(--linha);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--tela);color:var(--tinta);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;line-height:1.5;}
+  h1,h2,h3{font-family:'Outfit',sans-serif;font-weight:700;margin:0;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  .status-banner{background:var(--accent-bg);color:var(--accent);border-bottom:1px solid var(--line);
+    text-align:center;padding:8px 16px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;letter-spacing:.02em;}
+
+  .auth-bar{background:#0B100F;border-bottom:1px solid #1E2924;}
+  .auth-bar-inner{max-width:1180px;margin:0 auto;padding:8px 32px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+  .site-wordmark{display:flex;align-items:center;gap:10px;text-decoration:none;}
+  .site-wordmark .marca{width:8px;height:8px;border-radius:50%;background:var(--verified);flex-shrink:0;}
+  .site-wordmark span{color:#EAF3EC;font-family:'Outfit',sans-serif;font-weight:700;font-size:13px;letter-spacing:.01em;}
+  .site-nav{display:flex;gap:18px;align-items:center;}
+  .site-nav a{color:#9FC7AE;font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-decoration:none;padding:6px 2px;}
+  .site-nav a:hover{color:#fff;}
+  .site-nav a.atual{color:#fff;border-bottom:2px solid var(--verified);}
+  .auth-link{background:none;border:none;color:#9FC7AE;font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;cursor:pointer;padding:6px 4px;min-height:32px;}
+  .auth-link:hover{color:#fff;}
+  .auth-link-destaque{color:#fff;font-weight:600;}
+  .auth-email{color:#6E9880;font-family:'IBM Plex Mono',monospace;font-size:11px;margin-right:4px;}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(18,24,26,.55);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .modal-box{background:var(--papel);border-radius:16px;padding:28px;max-width:380px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);position:relative;}
+  .modal-box-larga{max-width:560px;max-height:85vh;overflow-y:auto;}
+  .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:16px;cursor:pointer;color:var(--ink-soft);min-height:32px;min-width:32px;}
+  .modal-box h2{font-size:22px;margin-bottom:6px;}
+  .modal-sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:18px;line-height:1.5;}
+  .modal-box input{width:100%;padding:12px 14px;border:1px solid var(--linha);border-radius:8px;margin-bottom:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;}
+  .auth-erro{color:var(--confirmed);font-size:12.5px;margin-bottom:10px;min-height:16px;}
+  .auth-trocar-modo{display:block;width:100%;background:none;border:none;color:var(--accent);font-size:12.5px;text-decoration:underline;cursor:pointer;margin-top:12px;padding:8px;}
+
+  .colinha-slot{border:1px solid var(--linha);border-radius:10px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .colinha-slot .cargo-label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;color:var(--ink-soft);letter-spacing:.05em;}
+  .colinha-slot .escolha{font-family:'Outfit',sans-serif;font-weight:600;font-size:15px;margin-top:2px;}
+  .colinha-slot .vazio{font-size:13px;color:var(--ink-soft);font-style:italic;margin-top:2px;}
+  .colinha-slot button{background:none;border:1px solid var(--linha);border-radius:6px;padding:6px 10px;font-size:11.5px;cursor:pointer;color:var(--ink-soft);}
+  .colinha-slot button:hover{border-color:var(--confirmed);color:var(--confirmed);}
+
+  .hero-urna{background:var(--tinta);color:#EAF3EC;padding:48px 32px 56px;position:relative;overflow:hidden;}
+  .hero-urna::before{content:"";position:absolute;inset:0;
+    background:radial-gradient(ellipse 800px 400px at 15% -10%, rgba(14,138,77,.35), transparent 60%);pointer-events:none;}
+  .hero-urna-inner{max-width:640px;margin:0 auto;text-align:center;position:relative;}
+  .brand-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;color:#8FBBA0;text-transform:uppercase;margin-bottom:10px;}
+  .hero-urna h1{font-size:clamp(30px,6vw,44px);color:#fff;letter-spacing:-0.01em;}
+  .hero-tagline{font-size:15px;color:#B9D3C2;margin:14px auto 30px;max-width:480px;line-height:1.55;}
+
+  .urna-console{background:#1B2420;border:1px solid #2C3A34;border-radius:16px;padding:22px 22px 20px;max-width:420px;margin:0 auto;box-shadow:0 20px 50px rgba(0,0,0,.35);}
+  .urna-console-label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8FBBA0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;text-align:left;}
+  .urna-console-row{display:flex;gap:8px;}
+  .urna-select{flex:1;padding:14px;border-radius:8px;border:1px solid #38473F;background:#0F1613;color:#EAF3EC;font-family:'IBM Plex Mono',monospace;font-size:16px;min-height:52px;}
+  .btn-confirma{background:var(--verified);color:#fff;border:none;border-radius:8px;padding:14px 20px;font-family:'Outfit',sans-serif;
+    font-weight:600;font-size:15px;cursor:pointer;min-height:52px;white-space:nowrap;transition:filter .15s ease;}
+  .btn-confirma:hover{filter:brightness(1.1);}
+  .btn-confirma:active{filter:brightness(0.95);}
+
+  .link-explorar{display:block;margin:22px auto 0;background:none;border:none;color:#9FC7AE;font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:13px;text-decoration:underline;cursor:pointer;min-height:44px;}
+  .link-explorar:hover{color:#fff;}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;font-family:'IBM Plex Mono',monospace;padding:16px 32px 0;}
+  .legend span{display:flex;align-items:center;gap:6px;position:relative;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .dot.verified{background:var(--verified);} .dot.pending{background:var(--pending);}
+  .dot.confirmed{background:var(--confirmed);} .dot.neutral{background:var(--ink-soft);}
+
+  .info-btn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;min-height:18px;
+    border-radius:50%;border:1px solid var(--ink-soft);background:none;color:var(--ink-soft);font-size:10px;
+    font-family:'IBM Plex Mono',monospace;cursor:pointer;padding:0;line-height:1;flex-shrink:0;}
+  .info-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .info-popover{position:absolute;top:100%;left:0;margin-top:8px;width:260px;max-width:80vw;background:var(--papel);
+    border:1px solid var(--linha);border-radius:10px;padding:12px 14px;font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:12.5px;line-height:1.5;color:var(--tinta);box-shadow:0 12px 30px rgba(18,24,26,.15);z-index:50;
+    white-space:normal;}
+  h4 .info-btn{margin-left:6px;vertical-align:middle;}
+  h4 .info-popover{top:100%;left:0;margin-top:10px;}
+
+  nav.tabs{display:flex;gap:6px;padding:14px 32px 0;overflow-x:auto;}
+  .tab-wrap{display:inline-flex;align-items:center;gap:4px;position:relative;flex-shrink:0;}
+  nav.tabs button[data-cargo]{background:var(--papel);border:1px solid var(--linha);padding:10px 16px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:500;
+    color:var(--ink-soft);cursor:pointer;border-radius:20px;white-space:nowrap;min-height:40px;}
+  nav.tabs button[data-cargo].active{color:#fff;background:var(--tinta);border-color:var(--tinta);}
+  .tab-wrap .info-popover{left:auto;right:0;}
+
+  .toolbar{display:flex;gap:12px;padding:18px 32px;flex-wrap:wrap;align-items:center;}
+  .toolbar input[type=text]{flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--line);background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;border-radius:var(--radius);}
+  .toolbar select{padding:10px 12px;border:1px solid var(--line);background:#fff;font-size:14px;border-radius:var(--radius);font-family:'Plus Jakarta Sans',sans-serif;min-height:44px;}
+  .compare-toggle{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:8px;}
+
+  .result-count{padding:0 32px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-soft);}
+
+  main{padding:8px 32px 60px;max-width:1180px;margin:0 auto;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;margin-top:10px;}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px 12px 10px;cursor:pointer;transition:box-shadow .15s ease, transform .15s ease;position:relative;box-shadow:0 1px 2px rgba(18,24,26,.04);}
+  .card:hover{box-shadow:0 8px 22px rgba(18,24,26,.10);transform:translateY(-2px);}
+  .card .protocolo{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink-soft);letter-spacing:.02em;opacity:.6;display:flex;justify-content:space-between;gap:6px;}
+  .card .protocolo .sit{color:var(--accent);}
+  .card h3{font-size:14.5px;margin-top:5px;font-family:'Outfit',sans-serif;line-height:1.25;}
+  .card .sub{font-size:11px;color:var(--ink-soft);margin-top:3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+  .selo-partido{display:inline-block;color:#fff;font-family:'IBM Plex Mono',monospace;font-size:8.5px;font-weight:600;
+    padding:2px 6px;border-radius:4px;letter-spacing:.02em;line-height:1.4;}
+  .card .badges{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;}
+  .badge{font-family:'IBM Plex Mono',monospace;font-size:9.5px;padding:3px 8px;border-radius:20px;letter-spacing:.01em;display:inline-flex;align-items:center;gap:4px;}
+  .badge.verified{background:var(--verified-bg);color:var(--verified);}
+  .badge.pending{background:var(--pending-bg);color:var(--pending);}
+  .badge.confirmed{background:var(--confirmed-bg);color:var(--confirmed);}
+  .badge.neutral{background:var(--accent-bg);color:var(--accent);}
+  .card .metric-row{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;border-top:1px dashed var(--line);padding-top:8px;}
+  .card .metric-row div span{display:block;}
+  .metric-row .val{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink);}
+  .metric-row .lbl{color:var(--ink-soft);font-size:9px;text-transform:uppercase;letter-spacing:.03em;}
+  .card input[type=checkbox]{position:absolute;top:10px;right:10px;width:18px;height:18px;display:none;}
+  .card.compare-mode input[type=checkbox]{display:block;}
+
+  .load-more{display:block;margin:20px auto 0;padding:10px 20px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;
+    background:#fff;border:1px solid var(--line);border-radius:2px;cursor:pointer;color:var(--ink);min-height:44px;}
+  .load-more:hover{border-color:var(--accent);color:var(--accent);}
+  .load-more:disabled{opacity:.5;cursor:default;}
+
+  .dossie{background:#fff;border:1px solid var(--line);margin-top:18px;display:none;}
+  .dossie.open{display:block;}
+  .dossie-head{padding:22px 26px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+  .dossie-head h2{font-size:26px;}
+  .dossie-head .protocolo{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);}
+  .dossie-close{background:none;border:1px solid var(--line);padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;height:fit-content;border-radius:2px;min-height:44px;}
+  .dossie-body{padding:22px 26px 30px;display:grid;grid-template-columns:1fr 1fr;gap:26px;}
+  @media(max-width:760px){.dossie-body{grid-template-columns:1fr;} .toolbar{padding:14px 16px;} main{padding:8px 16px 60px;} .hero-urna{padding:36px 16px 44px;} nav.tabs{padding:14px 16px 0;} .urna-secao{margin:24px 16px 0;} .urna-intro{padding:14px 16px 0;} .urna-console-row{flex-direction:column;} .legend{padding:16px 16px 0;}}
+  .section-block{margin-bottom:22px;}
+  .section-block h4{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:10px;border-bottom:1px solid var(--line);padding-bottom:6px;position:relative;}
+  .indisponivel{font-size:13px;color:var(--ink-soft);font-style:italic;}
+  .proposta-texto{font-size:13px;line-height:1.65;color:var(--tinta);max-height:400px;overflow-y:auto;padding-right:6px;}
+
+  .proc-item{border-left:3px solid var(--pending);padding:8px 0 8px 12px;margin-bottom:12px;font-size:13px;}
+  .proc-item.transitado_em_julgado, .proc-item.condenado_2a_instancia{border-color:var(--confirmed);}
+  .proc-item .status{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;}
+  .proc-item .fonte{font-size:11.5px;color:var(--accent);margin-top:4px;}
+  .proc-item .resposta{margin-top:6px;font-size:12px;color:var(--ink-soft);font-style:italic;}
+
+  .news-item{font-size:13px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--line);}
+  .fonte-link{color:var(--accent);text-decoration:none;font-size:11.5px;}
+  .fonte-link:hover{text-decoration:underline;}
+
+  .loading{text-align:center;padding:40px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;font-size:13px;}
+  .erro-carga{text-align:center;padding:40px;color:var(--confirmed);font-family:'IBM Plex Mono',monospace;font-size:13px;}
+
+  footer{padding:26px 32px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;text-align:center;}
+
+  .urna-secao{margin:28px 32px 0;max-width:1180px;margin-left:auto;margin-right:auto;}
+  .urna-secao-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:14px;}
+  .urna-secao-head h2{font-size:20px;position:relative;display:inline-flex;align-items:center;gap:6px;}
+  .urna-secao-head .ver-todos{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--accent);cursor:pointer;background:none;border:none;text-decoration:underline;padding:8px;min-height:44px;}
+  .urna-vazio{font-size:13px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;padding:10px 0 20px;}
+  .urna-intro{padding:16px 32px 0;max-width:1180px;margin:0 auto;color:var(--ink-soft);font-size:13.5px;}
+
+  .foto-card{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:7px;border:1px solid var(--line);margin-bottom:8px;background:var(--paper-2);}
+  .foto-placeholder{width:100%;aspect-ratio:3/4;border-radius:7px;border:1px solid var(--line);margin-bottom:8px;background:var(--paper-2);
+    display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;font-size:9px;text-align:center;padding:6px;}
+
+  .foto-dossie{width:120px;height:160px;object-fit:cover;border-radius:8px;border:1px solid var(--line);float:right;margin-left:16px;}
+  .foto-dossie-placeholder{width:120px;height:160px;border-radius:8px;border:1px solid var(--line);float:right;margin-left:16px;
+    background:var(--paper-2);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;font-size:10px;text-align:center;padding:6px;}
+
+  .completude{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;}
+  .completude-item{display:flex;align-items:center;gap:4px;color:var(--ink-soft);}
+  .completude-item.pronto{color:var(--verified);}
+  .completude-item .marca{font-size:11px;}  @media print{
+    body *{visibility:hidden;}
+    .modal-box-larga, .modal-box-larga *{visibility:visible;}
+    .modal-box-larga{position:fixed;top:0;left:0;box-shadow:none;max-height:none;overflow:visible;}
+    .modal-close, #btnImprimirColinha{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="status-banner" id="statusBanner">Conectando ao banco de dados…</div>
+
+<div class="auth-bar">
+  <div class="auth-bar-inner">
+    <a href="index.html" class="site-wordmark"><span class="marca"></span><span>OBSERVATÓRIO ELEITORAL</span></a>
+    <nav class="site-nav">
+      <a href="index.html" class="atual">Início</a>
+      <a href="metodologia.html">Metodologia</a>
+      <a href="changelog.html">Changelog</a>
+    </nav>
+    <div id="authLoggedOut">
+      <button id="btnEntrar" class="auth-link">Entrar / Criar conta</button>
+    </div>
+    <div id="authLoggedIn" style="display:none">
+      <span id="authEmail" class="auth-email"></span>
+      <button id="btnMinhaColinha" class="auth-link auth-link-destaque">Minha colinha</button>
+      <button id="btnSair" class="auth-link">Sair</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="authModalOverlay" style="display:none">
+  <div class="modal-box">
+    <button class="modal-close" onclick="fecharModalAuth()">✕</button>
+    <h2 id="authModalTitulo">Entrar</h2>
+    <p class="modal-sub">Sua colinha fica salva com segurança — só você vê suas escolhas.</p>
+    <input type="email" id="authEmailInput" placeholder="seu@email.com" autocomplete="email">
+    <input type="password" id="authSenhaInput" placeholder="Senha (mínimo 6 caracteres)" autocomplete="current-password">
+    <div id="authErro" class="auth-erro"></div>
+    <button id="authSubmit" class="btn-confirma" style="width:100%;">Entrar</button>
+    <button id="authTrocarModo" class="auth-trocar-modo">Ainda não tem conta? Criar uma agora</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="colinhaOverlay" style="display:none">
+  <div class="modal-box modal-box-larga">
+    <button class="modal-close" onclick="fecharColinha()">✕</button>
+    <h2>Minha colinha</h2>
+    <p class="modal-sub">Um candidato por cargo — a mesma escolha que você levaria pra urna. Fonte de zona eleitoral: <a class="fonte-link" href="https://www.tse.jus.br/eleitor-e-eleicoes/titulo-de-eleitor/local-de-votacao" target="_blank">consulte no site oficial do TSE ↗</a> (não coletamos CPF/título de eleitor aqui).</p>
+    <div id="colinhaSlots"></div>
+    <button id="btnImprimirColinha" class="load-more" style="margin-top:16px;">Imprimir / salvar como PDF</button>
+  </div>
+</div>
+
+<header class="hero-urna">
+  <div class="hero-urna-inner">
+    <div class="brand-eyebrow">Eleições 2026 · dados oficiais TSE / Câmara / Senado</div>
+    <h1>Observatório Eleitoral</h1>
+    <p class="hero-tagline">Digite seu estado e veja quem concorre na sua urna — presidente, governador, senador e os dois tipos de deputado, tudo de uma vez.</p>
+
+    <div class="urna-console">
+      <label for="urnaUf" class="urna-console-label">Seu estado</label>
+      <div class="urna-console-row">
+        <select id="urnaUf" class="urna-select"><option value="">Selecione…</option></select>
+        <button id="urnaBtn" class="btn-confirma">Ver minha urna →</button>
+      </div>
+    </div>
+
+    <button id="verExplorar" class="link-explorar">ou explore todos os candidatos por cargo</button>
+  </div>
+</header>
+
+<div id="urnaView">
+  <div id="urnaResultado"></div>
+</div>
+
+<div id="explorarView" style="display:none">
+<button id="voltarUrna" class="link-explorar" style="margin:16px 32px 0;">← Voltar para Minha urna</button>
+<div class="legend">
+  <span><i class="dot verified"></i> Ficha Limpa — registro aprovado
+    <button class="info-btn" onclick="toggleInfo(event,'info-verified')" aria-label="O que significa isso?">?</button>
+    <span class="info-popover" id="info-verified" hidden>O TSE já analisou este registro de candidatura e não encontrou impedimento — isso inclui a checagem prevista na Lei da Ficha Limpa (LC 135/2010).</span>
+  </span>
+  <span><i class="dot pending"></i> Registro em análise pelo TSE
+    <button class="info-btn" onclick="toggleInfo(event,'info-pending')" aria-label="O que significa isso?">?</button>
+    <span class="info-popover" id="info-pending" hidden>O TSE ainda não decidiu sobre este registro. É normal antes da eleição — a decisão pode sair a qualquer momento, inclusive depois.</span>
+  </span>
+  <span><i class="dot confirmed"></i> Registro impugnado pelo TSE
+    <button class="info-btn" onclick="toggleInfo(event,'info-confirmed')" aria-label="O que significa isso?">?</button>
+    <span class="info-popover" id="info-confirmed" hidden>O TSE negou ou cancelou este registro de candidatura. Pode haver recurso em andamento — a decisão final ainda pode mudar.</span>
+  </span>
+  <span>Ficha Limpa
+    <button class="info-btn" onclick="toggleInfo(event,'info-fichalimpa')" aria-label="O que é a Lei da Ficha Limpa?">?</button>
+    <span class="info-popover" id="info-fichalimpa" hidden>Lei Complementar 135/2010: impede que pessoas condenadas por certos crimes (por decisão de mais de um juiz) ou com contas públicas rejeitadas sejam candidatas por um período definido em lei.</span>
+  </span>
+</div>
+<nav class="tabs" id="tabs">
+  <span class="tab-wrap">
+    <button data-cargo="presidente" class="active">Presidente</button>
+    <button class="info-btn" onclick="toggleInfo(event,'info-cargo-presidente')" aria-label="O que faz esse cargo?">?</button>
+    <span class="info-popover" id="info-cargo-presidente" hidden>Chefe do Poder Executivo federal: comanda a administração pública do país, representa o Brasil no exterior, sanciona ou veta leis aprovadas pelo Congresso e nomeia ministros.</span>
+  </span>
+  <span class="tab-wrap">
+    <button data-cargo="governador">Governador</button>
+    <button class="info-btn" onclick="toggleInfo(event,'info-cargo-governador')" aria-label="O que faz esse cargo?">?</button>
+    <span class="info-popover" id="info-cargo-governador" hidden>Chefe do Poder Executivo estadual: administra o estado, propõe e sanciona leis estaduais, comanda a polícia militar e civil, e decide investimentos estaduais em saúde e educação.</span>
+  </span>
+  <span class="tab-wrap">
+    <button data-cargo="senador">Senador</button>
+    <button class="info-btn" onclick="toggleInfo(event,'info-cargo-senador')" aria-label="O que faz esse cargo?">?</button>
+    <span class="info-popover" id="info-cargo-senador" hidden>Representa o estado no Senado Federal: vota leis federais, aprova indicações para o STF e outras autoridades, e julga processos de impeachment.</span>
+  </span>
+  <span class="tab-wrap">
+    <button data-cargo="dep_federal">Deputado Federal</button>
+    <button class="info-btn" onclick="toggleInfo(event,'info-cargo-depfederal')" aria-label="O que faz esse cargo?">?</button>
+    <span class="info-popover" id="info-cargo-depfederal" hidden>Representa o estado na Câmara dos Deputados: propõe e vota leis federais (inclusive o orçamento da União) e fiscaliza o governo federal.</span>
+  </span>
+  <span class="tab-wrap">
+    <button data-cargo="dep_estadual">Deputado Estadual</button>
+    <button class="info-btn" onclick="toggleInfo(event,'info-cargo-depestadual')" aria-label="O que faz esse cargo?">?</button>
+    <span class="info-popover" id="info-cargo-depestadual" hidden>Vota leis dentro do próprio estado, na Assembleia Legislativa: define o orçamento estadual e fiscaliza o governador — não tem poder sobre leis federais.</span>
+  </span>
+</nav>
+
+<div class="toolbar">
+  <input type="text" id="search" placeholder="Buscar por nome ou partido…">
+  <select id="ufFilter"><option value="">Todos os estados</option></select>
+  <select id="ordenarPor">
+    <option value="nome">Ordenar por nome (A-Z)</option>
+    <option value="numero">Ordenar por número de urna</option>
+  </select>
+  <label class="compare-toggle"><input type="checkbox" id="compareToggle"> Modo comparação</label>
+</div>
+<div class="result-count" id="resultCount"></div>
+</div>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <button class="load-more" id="loadMore" style="display:none">Carregar mais candidatos</button>
+  <div class="dossie" id="dossie"></div>
+</main>
+
+<footer>
+  METODOLOGIA E FONTES OFICIAIS DISPONÍVEIS EM <a href="metodologia.html" style="color:var(--accent);">metodologia.html</a> ·
+  CHANGELOG E CONTESTAÇÃO EM <a href="changelog.html" style="color:var(--accent);">changelog.html</a> · PIPELINE DE INGESTÃO EM /pipeline ·
+  DADOS REAIS DO TSE/CÂMARA/SENADO — VER FICHA DE CADA CANDIDATO PARA FONTES ESPECÍFICAS
+</footer>
+
+<script>
+const SUPABASE_URL = "https://rnuikbvpagddhwxvgzdd.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_Xf5mg25tuP_PX0QzZnzI1w_BvxZuclp";
+
+let sb = null;
+if (typeof supabase === 'undefined') {
+  document.getElementById('statusBanner').textContent =
+    'A biblioteca de conexão (supabase-js) não carregou — verifique sua conexão com a internet ou se algum bloqueador de conteúdo está travando cdn.jsdelivr.net.';
+} else {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+// ---------- Autenticação (e-mail/senha via Supabase Auth) ----------
+// Nenhum CPF/título de eleitor é coletado — só e-mail e senha, para
+// permitir salvar a colinha pessoal de cada usuário com segurança.
+let usuarioAtual = null;
+let authModoCadastro = false;
+
+function atualizarBarraAuth(){
+  const logado = !!usuarioAtual;
+  document.getElementById('authLoggedOut').style.display = logado ? 'none' : 'block';
+  document.getElementById('authLoggedIn').style.display = logado ? 'flex' : 'none';
+  if (logado) document.getElementById('authEmail').textContent = usuarioAtual.email;
+}
+
+function abrirModalAuth(cadastro){
+  authModoCadastro = cadastro;
+  document.getElementById('authModalTitulo').textContent = cadastro ? 'Criar conta' : 'Entrar';
+  document.getElementById('authSubmit').textContent = cadastro ? 'Criar conta' : 'Entrar';
+  document.getElementById('authTrocarModo').textContent = cadastro ? 'Já tem conta? Entrar' : 'Ainda não tem conta? Criar uma agora';
+  document.getElementById('authErro').textContent = '';
+  document.getElementById('authModalOverlay').style.display = 'flex';
+}
+function fecharModalAuth(){ document.getElementById('authModalOverlay').style.display = 'none'; }
+
+async function submeterAuth(){
+  const email = document.getElementById('authEmailInput').value.trim();
+  const senha = document.getElementById('authSenhaInput').value;
+  const erroEl = document.getElementById('authErro');
+  erroEl.textContent = '';
+  if (!email || senha.length < 6) {
+    erroEl.textContent = 'Preencha um e-mail válido e uma senha de pelo menos 6 caracteres.';
+    return;
+  }
+  const { data, error } = authModoCadastro
+    ? await sb.auth.signUp({ email, password: senha })
+    : await sb.auth.signInWithPassword({ email, password: senha });
+  if (error) { erroEl.textContent = error.message; return; }
+  if (authModoCadastro && data.user && !data.session) {
+    erroEl.style.color = 'var(--verified)';
+    erroEl.textContent = 'Conta criada — confira seu e-mail para confirmar antes de entrar.';
+    return;
+  }
+  usuarioAtual = data.user;
+  atualizarBarraAuth();
+  fecharModalAuth();
+}
+
+async function sair(){
+  await sb.auth.signOut();
+  usuarioAtual = null;
+  atualizarBarraAuth();
+}
+
+// ---------- Colinha ----------
+const CARGOS_COLINHA = [
+  { chave: 'presidente', label: 'Presidente' },
+  { chave: 'governador', label: 'Governador' },
+  { chave: 'senador', label: 'Senador' },
+  { chave: 'dep_federal', label: 'Deputado Federal' },
+  { chave: 'dep_estadual', label: 'Deputado Estadual' },
+];
+
+async function adicionarNaColinha(candidatoId, cargo){
+  if (!usuarioAtual) { abrirModalAuth(false); return; }
+  const { error } = await sb.from('colinha_itens').upsert({
+    user_id: usuarioAtual.id, cargo, candidato_id: candidatoId,
+  }, { onConflict: 'user_id,cargo' });
+  if (error) { alert('Não foi possível salvar na colinha agora: ' + error.message); return; }
+  alert('Adicionado à sua colinha!');
+}
+
+async function removerDaColinha(cargo){
+  await sb.from('colinha_itens').delete().eq('user_id', usuarioAtual.id).eq('cargo', cargo);
+  abrirColinha();
+}
+
+async function abrirColinha(){
+  if (!usuarioAtual) { abrirModalAuth(false); return; }
+  document.getElementById('colinhaOverlay').style.display = 'flex';
+  const slotsEl = document.getElementById('colinhaSlots');
+  slotsEl.innerHTML = '<div class="loading">Carregando sua colinha…</div>';
+
+  const { data, error } = await sb.from('colinha_itens')
+    .select('cargo, candidato_id, candidatos(nome_urna, numero_urna, partido, uf)')
+    .eq('user_id', usuarioAtual.id);
+
+  if (error) { slotsEl.innerHTML = `<div class="erro-carga">${error.message}</div>`; return; }
+
+  const porCargo = Object.fromEntries((data || []).map(d => [d.cargo, d]));
+  slotsEl.innerHTML = CARGOS_COLINHA.map(({chave, label}) => {
+    const item = porCargo[chave];
+    return `
+    <div class="colinha-slot">
+      <div>
+        <div class="cargo-label">${label}</div>
+        ${item ? `<div class="escolha">Nº ${item.candidatos.numero_urna} — ${item.candidatos.nome_urna} (${item.candidatos.partido || '—'})</div>`
+               : `<div class="vazio">Ainda não escolhido</div>`}
+      </div>
+      ${item ? `<button onclick="removerDaColinha('${chave}')">Remover</button>` : ''}
+    </div>`;
+  }).join('');
+}
+function fecharColinha(){ document.getElementById('colinhaOverlay').style.display = 'none'; }
+
+const UFS = ["AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA",
+             "PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO"];
+const PAGE_SIZE = 24;
+
+let currentCargo = "presidente";
+let currentPage = 0;
+let compareMode = false;
+let compareSelection = [];
+let debounceTimer = null;
+
+const grid = document.getElementById('grid');
+const dossie = document.getElementById('dossie');
+const loadMoreBtn = document.getElementById('loadMore');
+const resultCount = document.getElementById('resultCount');
+const statusBanner = document.getElementById('statusBanner');
+
+const fmtMoeda = v => v == null ? null : Number(v).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+
+// PostgREST devolve um objeto único (não array) para um embed cuja FK é
+// UNIQUE — é o caso de propostas_governo.candidato_id (um candidato tem
+// no máximo uma proposta). candidato.propostas_governo por isso vem como
+// {...} ou null, nunca [...], diferente de atividade_legislativa/
+// financiamento_campanha (sem unique em candidato_id, sempre array).
+// Normaliza os dois formatos pra sempre poder tratar como lista.
+const aoArray = x => x == null ? [] : (Array.isArray(x) ? x : [x]);
+
+// Selo colorido do partido: não usamos logotipos reais dos partidos (são
+// marcas registradas de cada legenda — não achamos uma fonte oficial do
+// TSE que os disponibilize como dado aberto de reuso livre, diferente
+// das fotos de candidatos, que o TSE publica explicitamente para isso).
+// Em vez disso, geramos uma cor fixa e determinística por sigla — o
+// mesmo partido sempre aparece com a mesma cor em todo o site, dando um
+// efeito de reconhecimento visual rápido sem depender de imagem externa.
+function corDoPartido(sigla){
+  const s = (sigla || '?').toUpperCase();
+  let hash = 0;
+  for (let i = 0; i < s.length; i++) hash = s.charCodeAt(i) + ((hash << 5) - hash);
+  const matiz = Math.abs(hash) % 360;
+  return `hsl(${matiz}, 55%, 40%)`;
+}
+function seloPartido(sigla){
+  const s = (sigla || '?').toUpperCase();
+  const cor = corDoPartido(s);
+  return `<span class="selo-partido" style="background:${cor}">${s.slice(0,4)}</span>`;
+}
+
+// Traduz códigos de placeholder do TSE para texto legível — "#NE" aparece
+// quando a situação de candidatura ainda não foi definida pelo TSE
+// (comum antes do registro de candidaturas fechar).
+function situacaoLegivel(codigo){
+  if (!codigo || codigo === "#NE" || codigo === "#NULO#") return "Registro em análise";
+  return codigo;
+}
+
+function popularUFs(){
+  const sel = document.getElementById('ufFilter');
+  const selUrna = document.getElementById('urnaUf');
+  UFS.forEach(uf => {
+    sel.appendChild(new Option(uf, uf));
+    selUrna.appendChild(new Option(uf, uf));
+  });
+}
+
+const CARGOS_URNA = [
+  { chave: 'presidente', label: 'Presidente', nacional: true,
+    explicacao: 'Chefe do Poder Executivo federal: comanda a administração pública do país, representa o Brasil no exterior, sanciona ou veta leis aprovadas pelo Congresso e nomeia ministros.' },
+  { chave: 'governador', label: 'Governador',
+    explicacao: 'Chefe do Poder Executivo estadual: administra o estado, propõe e sanciona leis estaduais, comanda a polícia militar e civil, e decide investimentos estaduais em saúde e educação.' },
+  { chave: 'senador', label: 'Senador',
+    explicacao: 'Representa o estado no Senado Federal: vota leis federais, aprova indicações para o STF e outras autoridades, e julga processos de impeachment.' },
+  { chave: 'dep_federal', label: 'Deputado Federal',
+    explicacao: 'Representa o estado na Câmara dos Deputados: propõe e vota leis federais (inclusive o orçamento da União) e fiscaliza o governo federal.' },
+  { chave: 'dep_estadual', label: 'Deputado Estadual',
+    explicacao: 'Vota leis dentro do próprio estado, na Assembleia Legislativa: define o orçamento estadual e fiscaliza o governador — não tem poder sobre leis federais.' },
+];
+const PREVIA_POR_SECAO = 6;
+
+async function buscarUrna(uf){
+  const container = document.getElementById('urnaResultado');
+  container.innerHTML = '<div class="loading">Montando sua urna…</div>';
+
+  const resultados = await Promise.all(CARGOS_URNA.map(async ({chave, nacional}) => {
+    let query = sb.from('candidatos')
+      .select('candidato_id, nome_urna, cargo, uf, partido, numero_urna, situacao_candidatura, detalhe_situacao_candidatura, bens_declarados_total, foto_url', { count: 'exact' })
+      .eq('cargo', chave)
+      .order('nome_urna')
+      .limit(PREVIA_POR_SECAO);
+    if (!nacional) query = query.eq('uf', uf);
+    const { data, count, error } = await query;
+    return { chave, data: data || [], count: count || 0, error };
+  }));
+
+  container.innerHTML = '';
+  resultados.forEach(({chave, data, count, error}, i) => {
+    const info = CARGOS_URNA[i];
+    const secao = document.createElement('div');
+    secao.className = 'urna-secao';
+    const verTodosLabel = count > data.length ? `Ver todos os ${count}` : (count > 0 ? 'Ver ficha completa' : '');
+    secao.innerHTML = `
+      <div class="urna-secao-head">
+        <h2>${info.label}${info.nacional ? '' : ' — ' + uf}
+          <button class="info-btn" onclick="toggleInfo(event,'info-urna-${chave}')" aria-label="O que faz esse cargo?">?</button>
+          <span class="info-popover" id="info-urna-${chave}" hidden>${info.explicacao}</span>
+        </h2>
+        ${count > 0 ? `<button class="ver-todos" data-cargo="${chave}">${verTodosLabel} →</button>` : ''}
+      </div>
+      <div class="grid urna-grid-${chave}"></div>
+      ${error ? '<p class="urna-vazio">Não foi possível carregar esta seção agora.</p>' : ''}
+      ${!error && data.length === 0 ? `<p class="urna-vazio">Nenhum candidato encontrado para ${info.label.toLowerCase()}${info.nacional ? '' : ' em ' + uf}.</p>` : ''}
+    `;
+    const g = secao.querySelector(`.urna-grid-${chave}`);
+    data.forEach(c => g.appendChild(renderCard(c)));
+    secao.querySelectorAll('.ver-todos').forEach(btn => btn.addEventListener('click', () => {
+      switchMode('explorar');
+      document.querySelectorAll('#tabs button[data-cargo]').forEach(b => b.classList.toggle('active', b.dataset.cargo === chave));
+      currentCargo = chave;
+      document.getElementById('ufFilter').value = info.nacional ? '' : uf;
+      buscarPagina(true);
+    }));
+    container.appendChild(secao);
+  });
+}
+
+function switchMode(mode){
+  document.getElementById('urnaView').style.display = mode === 'urna' ? 'block' : 'none';
+  document.getElementById('explorarView').style.display = mode === 'explorar' ? 'block' : 'none';
+  document.getElementById('urnaResultado').innerHTML = '';
+  grid.innerHTML = '';
+  loadMoreBtn.style.display = 'none';
+  resultCount.textContent = '';
+  closeDossie();
+  if (mode === 'explorar') buscarPagina(true);
+}
+
+document.getElementById('verExplorar').addEventListener('click', () => switchMode('explorar'));
+document.getElementById('voltarUrna').addEventListener('click', () => switchMode('urna'));
+document.getElementById('urnaBtn').addEventListener('click', () => {
+  const uf = document.getElementById('urnaUf').value;
+  if (!uf) { document.getElementById('urnaResultado').innerHTML = '<p class="urna-vazio">Selecione um estado primeiro.</p>'; return; }
+  buscarUrna(uf);
+});
+
+// Classifica a situação de Ficha Limpa direto a partir da decisão oficial
+// do TSE (situacao_candidatura / detalhe_situacao_candidatura) — sem
+// nenhuma interpretação própria de processo judicial. "DEFERIDO" já
+// significa que o TSE não encontrou impedimento (inclusive de Ficha
+// Limpa) para o registro; "INDEFERIDO"/"CASSADO" significa que o TSE
+// impugnou o registro. Enquanto não há decisão, mostramos "em análise"
+// — nunca se lê ausência de decisão como "Ficha Limpa confirmada".
+function classificarFichaLimpa(situacao, detalhe){
+  const s = (situacao || '').toUpperCase();
+  const d = (detalhe || '').toUpperCase();
+  if (!s || s === '#NE' || s === '#NULO#') {
+    return { status: 'pending', label: 'Registro em análise pelo TSE' };
+  }
+  if (s.includes('INDEFERIDO') || s.includes('CASSADO') || d.includes('INDEFERIDO') || d.includes('CASSADO')) {
+    return { status: 'confirmed', label: 'Registro impugnado pelo TSE' };
+  }
+  if (s.includes('DEFERIDO')) {
+    return { status: 'verified', label: 'Ficha Limpa — registro aprovado pelo TSE' };
+  }
+  // Outros casos (renúncia, falecimento, substituição etc.) — informativo, não é status de Ficha Limpa
+  return { status: 'neutral', label: situacaoLegivel(situacao) };
+}
+
+// Tooltips de termos jurídicos (funciona por toque, não só passar o
+// mouse — importante para quem acessa pelo celular).
+function toggleInfo(evento, id){
+  evento.stopPropagation();
+  document.querySelectorAll('.info-popover').forEach(el => { if (el.id !== id) el.hidden = true; });
+  const el = document.getElementById(id);
+  el.hidden = !el.hidden;
+}
+document.addEventListener('click', () => document.querySelectorAll('.info-popover').forEach(el => el.hidden = true));
+
+function toggleProposta(){
+  const preview = document.getElementById('proposta-preview');
+  const completa = document.getElementById('proposta-completa');
+  const btn = document.getElementById('proposta-btn');
+  const abrindo = completa.hidden;
+  completa.hidden = !abrindo;
+  preview.hidden = abrindo;
+  btn.textContent = abrindo ? 'Mostrar menos ↑' : 'Ver proposta completa →';
+}
+
+function renderPropostaGoverno(candidato){
+  const proposta = aoArray(candidato.propostas_governo)[0];
+  return `
+    <div class="section-block">
+      <h4>Proposta de governo (TSE)
+        <button class="info-btn" onclick="toggleInfo(event,'info-proposta-governo')" aria-label="O que é isso?">?</button>
+        <span class="info-popover" id="info-proposta-governo" hidden>Documento que o próprio candidato apresenta ao TSE no registro da candidatura, descrevendo o que pretende fazer se eleito. É texto do candidato, não uma checagem factual deste site.</span>
+      </h4>
+      ${proposta && proposta.texto_extraido ? `
+        <div id="proposta-preview" class="proposta-texto">${proposta.texto_extraido.slice(0, 500).replace(/\n/g,'<br>')}${proposta.texto_extraido.length > 500 ? '…' : ''}</div>
+        <div id="proposta-completa" class="proposta-texto" hidden>${proposta.texto_extraido.replace(/\n/g,'<br>')}</div>
+        ${proposta.texto_extraido.length > 500 ? `<button id="proposta-btn" class="auth-trocar-modo" style="margin-top:8px;" onclick="toggleProposta()">Ver proposta completa →</button>` : ''}
+        <div class="cpf-note" style="font-size:11px;color:var(--ink-soft);margin-top:8px;">Fonte: proposta de governo registrada no TSE. Extraído automaticamente do PDF oficial — pode conter pequenos erros de formatação.</div>
+      ` : `<p class="indisponivel">Proposta de governo ainda não disponível para este candidato nesta base.</p>`}
+    </div>`;
+}
+
+function renderFinanciamentoCampanha(candidato){
+  const receitas = candidato.financiamento_campanha || [];
+  if (receitas.length === 0){
+    return `
+      <div class="section-block">
+        <h4>Financiamento de campanha (TSE)
+          <button class="info-btn" onclick="toggleInfo(event,'info-financiamento')" aria-label="O que é isso?">?</button>
+          <span class="info-popover" id="info-financiamento" hidden>Receitas de campanha declaradas pelo próprio candidato à Justiça Eleitoral — quem doou, quanto e de que origem (recurso próprio, partido, pessoa física, Fundo Especial etc). Não inclui despesas.</span>
+        </h4>
+        <p class="indisponivel">Nenhuma receita de campanha registrada para este candidato nesta base.</p>
+      </div>`;
+  }
+
+  const { total, porTipo, maiores, count } = resumoFinanciamento(receitas);
+  const LIMITE_PREVIA = 8;
+  const previa = maiores.slice(0, LIMITE_PREVIA);
+  const resto = maiores.slice(LIMITE_PREVIA);
+
+  const linhaDoacao = r => `
+    <div class="news-item">
+      <div style="display:flex;justify-content:space-between;gap:10px;">
+        <span>${r.doador_nome || 'Doador não identificado'}</span>
+        <span class="mono" style="white-space:nowrap;">${fmtMoeda(r.valor) || '—'}</span>
+      </div>
+      <div class="sub" style="margin-top:2px;">${r.tipo_doador || 'Origem não identificada'}${fmtDataBr(r.data_receita) ? ' · ' + fmtDataBr(r.data_receita) : ''}</div>
+    </div>`;
+
+  const porTipoOrdenado = Object.entries(porTipo).sort((a, b) => b[1] - a[1]);
+
+  return `
+    <div class="section-block">
+      <h4>Financiamento de campanha (TSE)
+        <button class="info-btn" onclick="toggleInfo(event,'info-financiamento')" aria-label="O que é isso?">?</button>
+        <span class="info-popover" id="info-financiamento" hidden>Receitas de campanha declaradas pelo próprio candidato à Justiça Eleitoral — quem doou, quanto e de que origem (recurso próprio, partido, pessoa física, Fundo Especial etc). Não inclui despesas.</span>
+      </h4>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;">${fmtMoeda(total) || '—'}</div>
+      <div class="cpf-note" style="font-size:11px;color:var(--ink-soft);margin:2px 0 10px;">Total arrecadado em ${count} receita(s) declarada(s).</div>
+      <p class="mono" style="font-size:12px;margin-bottom:10px;">
+        ${porTipoOrdenado.map(([tipo, valor]) => `${tipo}: ${fmtMoeda(valor)}`).join('<br>')}
+      </p>
+      <div id="financiamento-previa">${previa.map(linhaDoacao).join('')}</div>
+      <div id="financiamento-resto" hidden>${resto.map(linhaDoacao).join('')}</div>
+      ${resto.length > 0 ? `<button id="financiamento-btn" class="auth-trocar-modo" style="margin-top:4px;" data-texto-ver-mais="Ver todas as ${count} receitas →" onclick="toggleFinanciamento()">Ver todas as ${count} receitas →</button>` : ''}
+      <div class="cpf-note" style="font-size:11px;color:var(--ink-soft);margin-top:8px;">Fonte: Prestação de Contas Eleitorais (TSE). CPF/CNPJ do doador não é exibido (dado pessoal, LGPD).</div>
+    </div>`;
+}
+
+function toggleFinanciamento(){
+  const previa = document.getElementById('financiamento-previa');
+  const resto = document.getElementById('financiamento-resto');
+  const btn = document.getElementById('financiamento-btn');
+  const abrindo = resto.hidden;
+  resto.hidden = !abrindo;
+  btn.textContent = abrindo ? 'Mostrar menos ↑' : btn.dataset.textoVerMais;
+}
+
+function statusBadge(info){
+  const map = { verified:'verified', pending:'pending', confirmed:'confirmed', neutral:'neutral' };
+  const cls = map[info.status] || 'neutral';
+  return `<span class="badge ${cls}"><i class="dot ${cls}" style="width:6px;height:6px;"></i>${info.label}</span>`;
+}
+
+async function buscarPagina(reset){
+  if (reset){ currentPage = 0; grid.innerHTML = ''; }
+  const q = document.getElementById('search').value.trim();
+  const uf = document.getElementById('ufFilter').value;
+  const ordenacao = document.getElementById('ordenarPor').value;
+
+  loadMoreBtn.disabled = true;
+  loadMoreBtn.textContent = 'Carregando…';
+  if (reset) grid.innerHTML = '<div class="loading">Buscando candidatos…</div>';
+
+  let query = sb.from('candidatos')
+    .select('candidato_id, nome_urna, cargo, uf, partido, numero_urna, situacao_candidatura, detalhe_situacao_candidatura, bens_declarados_total, foto_url', { count: 'exact' })
+    .eq('cargo', currentCargo);
+
+  // Ordenação neutra por padrão: nome (A-Z) ou número de urna — nunca
+  // por pesquisa de intenção de voto ou "relevância" (ver metodologia.md
+  // §5: ordenação idêntica para todos os candidatos, sem juízo de valor).
+  query = ordenacao === 'numero'
+    ? query.order('numero_urna_int', { ascending: true, nullsFirst: false })
+    : query.order('nome_urna');
+
+  query = query.range(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE - 1);
+
+  if (uf) query = query.eq('uf', uf);
+  if (q) query = query.or(`nome_urna.ilike.%${q}%,partido.ilike.%${q}%`);
+
+  const { data, error, count } = await query;
+
+  if (reset) grid.innerHTML = '';
+
+  if (error){
+    grid.innerHTML = `<div class="erro-carga">Não foi possível carregar os candidatos agora. Tente recarregar a página.<br><span class="mono" style="font-size:11px;">${error.message}</span></div>`;
+    loadMoreBtn.style.display = 'none';
+    return;
+  }
+
+  if (reset && (!data || data.length === 0)){
+    grid.innerHTML = `<p style="color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;font-size:13px;">Nenhum candidato encontrado com esses filtros.</p>`;
+    resultCount.textContent = '';
+    loadMoreBtn.style.display = 'none';
+    return;
+  }
+
+  data.forEach(c => grid.appendChild(renderCard(c)));
+
+  resultCount.textContent = `${count ?? '?'} candidato(s) encontrado(s)`;
+  const carregados = (currentPage + 1) * PAGE_SIZE;
+  loadMoreBtn.style.display = (count && carregados < count) ? 'block' : 'none';
+  loadMoreBtn.disabled = false;
+  loadMoreBtn.textContent = 'Carregar mais candidatos';
+}
+
+function renderCard(c){
+  const div = document.createElement('div');
+  div.className = `card ${compareMode ? 'compare-mode' : ''}`;
+  const fotoHtml = c.foto_url
+    ? `<img class="foto-card" src="${c.foto_url}" alt="Foto de ${c.nome_urna}" loading="lazy" onerror="this.outerHTML='<div class=\\'foto-placeholder\\'>Foto ainda não disponível</div>'">`
+    : `<div class="foto-placeholder">Foto ainda não disponível</div>`;
+  const ficha = classificarFichaLimpa(c.situacao_candidatura, c.detalhe_situacao_candidatura);
+  div.innerHTML = `
+    <input type="checkbox" ${compareSelection.includes(c.candidato_id) ? 'checked' : ''}>
+    ${fotoHtml}
+    <div class="protocolo"><span>${c.candidato_id}</span></div>
+    <h3>${c.nome_urna}</h3>
+    <div class="sub">${seloPartido(c.partido)} ${c.partido || '—'} · Nº ${c.numero_urna || '—'} · ${c.uf}</div>
+    <div class="badges">${statusBadge(ficha)}</div>
+    <div class="metric-row">
+      <div><span class="val">${fmtMoeda(c.bens_declarados_total) || '—'}</span><span class="lbl">Bens declarados</span></div>
+    </div>
+  `;
+  div.querySelector('input[type=checkbox]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleCompare(c.candidato_id);
+  });
+  div.addEventListener('click', () => openDossie(c.candidato_id));
+  return div;
+}
+
+function toggleCompare(id){
+  if (compareSelection.includes(id)) compareSelection = compareSelection.filter(x => x !== id);
+  else if (compareSelection.length < 3) compareSelection.push(id);
+  if (compareSelection.length >= 2) openCompare();
+}
+
+async function buscarDetalhe(candidatoId){
+  const { data: candidato, error } = await sb.from('candidatos')
+    .select('*, atividade_legislativa(*), propostas_governo(*), financiamento_campanha(doador_nome, tipo_doador, valor, data_receita, descricao, fonte_url, capturado_em)')
+    .eq('candidato_id', candidatoId).single();
+  if (error) throw error;
+  return { candidato };
+}
+
+// Agregações de financiamento_campanha calculadas no cliente: a tabela é
+// uma linha por doação (ver metodologia.md §3.4 — sem chave estável do
+// TSE pra fazer isso incremental no pipeline), então soma/quebra por tipo
+// é feita aqui em cima do array já carregado, não em SQL.
+function resumoFinanciamento(receitas){
+  const lista = receitas || [];
+  const total = lista.reduce((soma, r) => soma + (Number(r.valor) || 0), 0);
+  const porTipo = {};
+  lista.forEach(r => {
+    const chave = r.tipo_doador || 'Não identificado';
+    porTipo[chave] = (porTipo[chave] || 0) + (Number(r.valor) || 0);
+  });
+  const maiores = [...lista].sort((a, b) => (Number(b.valor) || 0) - (Number(a.valor) || 0));
+  return { total, porTipo, maiores, count: lista.length };
+}
+
+function fmtDataBr(iso){
+  if (!iso) return null;
+  const [ano, mes, dia] = iso.split('-');
+  return (ano && mes && dia) ? `${dia}/${mes}/${ano}` : iso;
+}
+
+// "Última atualização" visível por candidato (ver metodologia.md §7): o
+// mais recente entre a normalização do próprio registro TSE e a captura
+// de cada fonte relacionada (atividade legislativa, propostas, receitas)
+// — nenhuma dessas datas por si só representa "quando os dados deste
+// candidato foram checados pela última vez", só o máximo entre elas.
+function ultimaAtualizacao(candidato){
+  const datas = [
+    candidato.normalizado_em,
+    ...(candidato.atividade_legislativa || []).map(a => a.capturado_em),
+    ...aoArray(candidato.propostas_governo).map(p => p.capturado_em),
+    ...(candidato.financiamento_campanha || []).map(f => f.capturado_em),
+  ].filter(Boolean).map(d => new Date(d));
+  if (datas.length === 0) return null;
+  const maisRecente = new Date(Math.max(...datas));
+  return maisRecente.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+async function openCompare(){
+  dossie.classList.add('open');
+  dossie.innerHTML = '<div class="loading">Carregando comparação…</div>';
+  dossie.scrollIntoView({behavior:'smooth', block:'start'});
+
+  const detalhes = await Promise.all(compareSelection.map(id => buscarDetalhe(id).catch(() => null)));
+  const validos = detalhes.filter(Boolean);
+
+  dossie.innerHTML = `
+    <div class="dossie-head">
+      <div><div class="protocolo">COMPARAÇÃO · ${validos.length} CANDIDATOS</div><h2>Comparativo lado a lado</h2></div>
+      <button class="dossie-close" onclick="closeDossie()">Fechar ✕</button>
+    </div>
+    <div class="dossie-body" style="grid-template-columns:repeat(${validos.length},1fr);">
+      ${validos.map(({candidato}) => {
+        const ativ = (candidato.atividade_legislativa || [])[0];
+        const ficha = classificarFichaLimpa(candidato.situacao_candidatura, candidato.detalhe_situacao_candidatura);
+        const { total: totalArrecadado } = resumoFinanciamento(candidato.financiamento_campanha);
+        return `
+        <div>
+          <h3 style="font-size:17px;">${candidato.nome_urna}</h3>
+          <div class="sub" style="margin-bottom:10px;">${seloPartido(candidato.partido)} ${candidato.partido || '—'} · ${candidato.uf}</div>
+          ${statusBadge(ficha)}
+          <div class="section-block" style="margin-top:14px;">
+            <h4>Indicadores</h4>
+            <p class="mono" style="font-size:12.5px;">
+              Bens declarados: ${fmtMoeda(candidato.bens_declarados_total) || '—'}<br>
+              Assiduidade: ${ativ ? ativ.assiduidade_pct + '%' : 'ainda não disponível'}<br>
+              Proposições apresentadas: ${ativ ? ativ.projetos_apresentados : 'ainda não disponível'}<br>
+              Total arrecadado (campanha): ${totalArrecadado ? fmtMoeda(totalArrecadado) : 'ainda não disponível'}
+            </p>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+async function openDossie(candidatoId){
+  dossie.classList.add('open');
+  dossie.innerHTML = '<div class="loading">Carregando ficha do candidato…</div>';
+  dossie.scrollIntoView({behavior:'smooth', block:'start'});
+
+  let candidato;
+  try {
+    ({ candidato } = await buscarDetalhe(candidatoId));
+  } catch (err) {
+    dossie.innerHTML = `<div class="erro-carga">Não foi possível carregar esta ficha agora.<br><span class="mono" style="font-size:11px;">${err.message}</span></div>`;
+    return;
+  }
+
+  const ativ = (candidato.atividade_legislativa || [])[0];
+  const ficha = classificarFichaLimpa(candidato.situacao_candidatura, candidato.detalhe_situacao_candidatura);
+
+  const fotoDossieHtml = candidato.foto_url
+    ? `<img class="foto-dossie" src="${candidato.foto_url}" alt="Foto de ${candidato.nome_urna}" onerror="this.outerHTML='<div class=\\'foto-dossie-placeholder\\'>Foto ainda não disponível</div>'">`
+    : `<div class="foto-dossie-placeholder">Foto ainda não disponível</div>`;
+
+  const completude = `
+    <div class="completude">
+      <span class="completude-item pronto"><span class="marca">●</span> Identidade e bens (TSE)</span>
+      <span class="completude-item ${ativ ? 'pronto' : ''}"><span class="marca">${ativ ? '●' : '○'}</span> Atividade legislativa</span>
+      <span class="completude-item ${candidato.foto_url ? 'pronto' : ''}"><span class="marca">${candidato.foto_url ? '●' : '○'}</span> Foto oficial</span>
+      <span class="completude-item ${(candidato.financiamento_campanha || []).length ? 'pronto' : ''}"><span class="marca">${(candidato.financiamento_campanha || []).length ? '●' : '○'}</span> Financiamento de campanha</span>
+    </div>`;
+
+  dossie.innerHTML = `
+    <div class="dossie-head">
+      <div>
+        ${fotoDossieHtml}
+        <div class="protocolo">${candidato.candidato_id}</div>
+        <h2>${candidato.nome_urna}</h2>
+        <div class="sub">${seloPartido(candidato.partido)} ${candidato.partido || '—'} · Nº ${candidato.numero_urna || '—'} · ${candidato.uf} · ${statusBadge(ficha)}</div>
+        ${completude}
+        ${ultimaAtualizacao(candidato) ? `<div class="cpf-note" style="font-size:11px;color:var(--ink-soft);margin-top:8px;">Dados verificados pela última vez em ${ultimaAtualizacao(candidato)}</div>` : ''}
+        <button class="btn-confirma" style="margin-top:14px;padding:10px 16px;font-size:13px;" onclick="adicionarNaColinha('${candidato.candidato_id}','${candidato.cargo}')">+ Adicionar à minha colinha</button>
+        <a href="changelog.html?candidato=${encodeURIComponent(candidato.candidato_id)}" class="fonte-link" style="display:block;margin-top:10px;font-size:11.5px;">Contestar um dado desta ficha →</a>
+      </div>
+      <button class="dossie-close" onclick="closeDossie()">Fechar ✕</button>
+    </div>
+    <div class="dossie-body">
+      <div>
+        <div class="section-block">
+          <h4>Assiduidade e produção legislativa</h4>
+          ${ativ ? `
+            <p style="font-size:13px;">${ativ.nota_metodologica || ''}</p>
+            <p class="mono" style="font-size:12.5px;">
+              Assiduidade estimada: ${ativ.assiduidade_pct != null ? ativ.assiduidade_pct + '%' : '—'} (${ativ.periodo_referencia || ''})<br>
+              Proposições apresentadas: ${ativ.projetos_apresentados ?? '—'} <span style="color:var(--ink-soft)">(inclui requerimentos e indicações, não só projetos de lei)</span>
+            </p>
+            <div class="cpf-note" style="font-size:11px;color:var(--ink-soft);margin-top:4px;">Fonte: ${ativ.fonte_url || '—'}</div>
+          ` : `<p class="indisponivel">Dado ainda não disponível para este candidato — ou porque não tem mandato parlamentar atual, ou porque a sincronização com Câmara/Senado ainda está em andamento.</p>`}
+        </div>
+        <div class="section-block">
+          <h4>Bens declarados (TSE)</h4>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;">${fmtMoeda(candidato.bens_declarados_total) || 'Não declarado'}</div>
+          <div class="cpf-note" style="font-size:11px;color:var(--ink-soft);margin-top:4px;">Valor total declarado. Detalhamento item a item ainda não incluído nesta versão do banco.</div>
+        </div>
+        ${renderFinanciamentoCampanha(candidato)}
+        ${['presidente','governador'].includes(candidato.cargo) ? renderPropostaGoverno(candidato) : ''}
+      </div>
+      <div>
+        <div class="section-block">
+          <h4>Ficha Limpa (Lei Complementar 135/2010)
+            <button class="info-btn" onclick="toggleInfo(event,'info-fichalimpa-dossie')" aria-label="O que é a Lei da Ficha Limpa?">?</button>
+            <span class="info-popover" id="info-fichalimpa-dossie" hidden>Lei que impede que pessoas condenadas por certos crimes (por mais de um juiz) ou com contas públicas rejeitadas sejam candidatas por um período definido em lei. Este site reporta apenas a decisão oficial do TSE sobre o registro — não faz avaliação própria de processos.</span>
+          </h4>
+          <div class="proc-item ${ficha.status}">
+            <div class="status">${ficha.label}</div>
+            <p style="margin:4px 0;">
+              ${ficha.status === 'pending'
+                ? 'O TSE ainda não concluiu a análise deste registro de candidatura. Esta ficha é atualizada automaticamente conforme o TSE publica novas decisões.'
+                : ficha.status === 'verified'
+                ? 'O TSE deferiu o registro desta candidatura — isso inclui a verificação de elegibilidade prevista na Lei da Ficha Limpa.'
+                : ficha.status === 'confirmed'
+                ? 'O TSE impugnou/indeferiu o registro desta candidatura. Decisões podem ainda estar sujeitas a recurso.'
+                : 'Situação de registro fora das categorias padrão (ex.: renúncia, falecimento, substituição).'}
+            </p>
+            ${candidato.detalhe_situacao_candidatura && candidato.detalhe_situacao_candidatura !== '#NE' ? `<div class="fonte" style="color:var(--ink-soft);">Detalhe do TSE: ${candidato.detalhe_situacao_candidatura}</div>` : ''}
+            <div class="fonte"><a class="fonte-link" href="https://www.tse.jus.br/eleicoes/eleicoes-2026" target="_blank">Consultar situação atualizada no TSE ↗</a></div>
+          </div>
+          <p style="font-size:11.5px;color:var(--ink-soft);margin-top:8px;">
+            Esta ficha reporta apenas a decisão oficial do TSE sobre o registro de candidatura — não é uma avaliação própria deste site sobre processos judiciais do candidato.
+          </p>
+        </div>
+      </div>
+    </div>`;
+}
+
+function closeDossie(){ dossie.classList.remove('open'); dossie.innerHTML = ''; }
+
+document.getElementById('tabs').addEventListener('click', e => {
+  if (e.target.tagName !== 'BUTTON' || !e.target.dataset.cargo) return;
+  document.querySelectorAll('#tabs button[data-cargo]').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  currentCargo = e.target.dataset.cargo;
+  closeDossie();
+  buscarPagina(true);
+});
+
+document.getElementById('search').addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => buscarPagina(true), 350);
+});
+document.getElementById('ufFilter').addEventListener('change', () => buscarPagina(true));
+document.getElementById('ordenarPor').addEventListener('change', () => buscarPagina(true));
+document.getElementById('compareToggle').addEventListener('change', e => {
+  compareMode = e.target.checked;
+  compareSelection = [];
+  closeDossie();
+  buscarPagina(true);
+});
+loadMoreBtn.addEventListener('click', () => { currentPage++; buscarPagina(false); });
+
+document.getElementById('btnEntrar').addEventListener('click', () => abrirModalAuth(false));
+document.getElementById('btnMinhaColinha').addEventListener('click', abrirColinha);
+document.getElementById('btnSair').addEventListener('click', sair);
+document.getElementById('authTrocarModo').addEventListener('click', () => abrirModalAuth(!authModoCadastro));
+document.getElementById('authSubmit').addEventListener('click', submeterAuth);
+document.getElementById('btnImprimirColinha').addEventListener('click', () => window.print());
+document.getElementById('authSenhaInput').addEventListener('keydown', e => { if (e.key === 'Enter') submeterAuth(); });
+
+(async function init(){
+  if (!sb) return; // já mostramos o motivo acima (CDN não carregou)
+  popularUFs();
+
+  const { data: sessaoAtual } = await sb.auth.getSession();
+  if (sessaoAtual?.session) {
+    usuarioAtual = sessaoAtual.session.user;
+    atualizarBarraAuth();
+  }
+  sb.auth.onAuthStateChange((_evento, sessao) => {
+    usuarioAtual = sessao ? sessao.user : null;
+    atualizarBarraAuth();
+  });
+
+  try {
+    const { error } = await sb.from('candidatos').select('candidato_id', { count: 'exact', head: true });
+    if (error) throw error;
+    statusBanner.textContent = 'Conectado — dados reais do TSE/Câmara/Senado';
+    statusBanner.style.background = 'var(--verified-bg)';
+    statusBanner.style.color = 'var(--verified)';
+  } catch (err) {
+    console.error('Falha ao conectar no Supabase:', err);
+    statusBanner.textContent = `Não foi possível conectar ao banco agora: ${err.message || err}`;
+    statusBanner.style.background = 'var(--confirmed-bg)';
+    statusBanner.style.color = 'var(--confirmed)';
+    return;
+  }
+  // Modo inicial é "Minha urna" — não busca a lista de "Explorar" à toa;
+  // essa consulta só roda quando o usuário troca de modo ou usa os filtros.
+})();
+</script>
+</body>
+</html>
