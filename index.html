@@ -100,7 +100,7 @@
   .urna-console.recolhido{display:none;}
 
   .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;font-family:'IBM Plex Mono',monospace;padding:16px 32px 0;}
-  .legend span{display:flex;align-items:center;gap:6px;position:relative;}
+  .legend > span{display:flex;align-items:center;gap:6px;position:relative;}
   .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
   .dot.verified{background:var(--verified);} .dot.pending{background:var(--pending);}
   .dot.confirmed{background:var(--confirmed);} .dot.neutral{background:var(--ink-soft);}
@@ -113,6 +113,15 @@
     border:1px solid var(--linha);border-radius:10px;padding:12px 14px;font-family:'Plus Jakarta Sans',sans-serif;
     font-size:12.5px;line-height:1.5;color:var(--tinta);box-shadow:0 12px 30px rgba(18,24,26,.15);z-index:50;
     white-space:normal;}
+  /* Trava de segurança: .info-popover é um <span>, então qualquer regra
+     "X span{display:...}" de um ancestral (ex.: .legend span, antes desta
+     correção) pode ganhar de [hidden]{display:none} da UA stylesheet por
+     vir depois no cascade, mesmo com especificidade igual — foi
+     exatamente isso que deixava as 4 explicações da legenda (Ficha Limpa/
+     TSE) todas abertas ao mesmo tempo ao entrar no modo Explorar. Esta
+     regra garante que hidden sempre vence, em qualquer contexto atual ou
+     futuro onde o componente for reusado. */
+  .info-popover[hidden]{display:none;}
   h4 .info-btn{margin-left:6px;vertical-align:middle;}
   h4 .info-popover{top:100%;left:0;margin-top:10px;}
 
