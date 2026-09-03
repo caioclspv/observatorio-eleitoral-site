@@ -95,7 +95,7 @@
 </p>
 
 <h2>Contestar um dado</h2>
-<p style="font-size:13.5px;color:var(--ink-soft);">Encontrou algo errado na ficha de um candidato? Registre aqui — checamos e respondemos aqui mesmo nesta página.</p>
+<p style="font-size:13.5px;color:var(--ink-soft);">Encontrou algo errado na ficha de um candidato? Registre aqui — checamos e respondemos em até <strong>5 dias úteis</strong>, direto nesta página.</p>
 
 <label for="buscaCandidato">Candidato</label>
 <div class="busca-wrap">
@@ -221,7 +221,7 @@ document.getElementById('btnEnviarContestacao').addEventListener('click', async 
     msgEl.classList.add('erro');
     return;
   }
-  msgEl.textContent = 'Contestação registrada. Ela aparece na lista pública assim que for respondida.';
+  msgEl.textContent = 'Contestação registrada. Respondemos em até 5 dias úteis — ela aparece na lista pública assim que for respondida.';
   msgEl.classList.add('ok');
   document.getElementById('mensagemContestacao').value = '';
   document.getElementById('contatoContestacao').value = '';
