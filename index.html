@@ -157,6 +157,7 @@
   .proc-item .resposta{margin-top:6px;font-size:12px;color:var(--ink-soft);font-style:italic;}
 
   .news-item{font-size:13px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--line);}
+  .news-item mark{background:var(--accent-bg);color:var(--tinta);font-weight:600;padding:1px 2px;border-radius:3px;}
   .fonte-link{color:var(--accent);text-decoration:none;font-size:11.5px;}
   .fonte-link:hover{text-decoration:underline;}
 
@@ -621,18 +622,83 @@ function toggleInfo(evento, id){
 }
 document.addEventListener('click', () => document.querySelectorAll('.info-popover').forEach(el => el.hidden = true));
 
-function toggleProposta(){
-  const preview = document.getElementById('proposta-preview');
-  const completa = document.getElementById('proposta-completa');
-  const btn = document.getElementById('proposta-btn');
+function toggleProposta(candidatoId){
+  const preview = document.getElementById(`proposta-preview-${candidatoId}`);
+  const completa = document.getElementById(`proposta-completa-${candidatoId}`);
+  const btn = document.getElementById(`proposta-btn-${candidatoId}`);
   const abrindo = completa.hidden;
   completa.hidden = !abrindo;
   preview.hidden = abrindo;
   btn.textContent = abrindo ? 'Mostrar menos ↑' : 'Ver proposta completa →';
 }
 
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Texto completo de cada proposta, fora do DOM — a busca precisa do
+// texto original (não escapado/quebrado em <br>) pra achar posição
+// exata de cada ocorrência e montar o trecho ao redor dela.
+const PROPOSTA_TEXTO_POR_CANDIDATO = {};
+
+// Busca por palavra dentro da proposta (client-side, texto já carregado
+// — sem chamada nova ao banco). Alternativa a "resumir" a proposta, que
+// a metodologia não permite (linguagem de registro, não interpretação):
+// aqui não interpretamos nada, só mostramos os trechos onde o termo
+// buscado aparece de fato, com a palavra em destaque.
+function buscarNaProposta(candidatoId){
+  const termo = document.getElementById(`proposta-busca-${candidatoId}`).value.trim();
+  const resultadoEl = document.getElementById(`proposta-resultado-busca-${candidatoId}`);
+  const previewEl = document.getElementById(`proposta-preview-${candidatoId}`);
+  const completaWrap = document.getElementById(`proposta-completa-wrap-${candidatoId}`);
+  const texto = PROPOSTA_TEXTO_POR_CANDIDATO[candidatoId] || '';
+
+  if (termo.length < 2){
+    resultadoEl.innerHTML = '';
+    resultadoEl.hidden = true;
+    previewEl.hidden = false;
+    if (completaWrap) completaWrap.hidden = false;
+    return;
+  }
+
+  previewEl.hidden = true;
+  if (completaWrap) completaWrap.hidden = true;
+  resultadoEl.hidden = false;
+
+  const termoNorm = termo.toLowerCase();
+  const textoNorm = texto.toLowerCase();
+  const RAIO = 90; // caracteres de contexto pra cada lado do termo encontrado
+  const LIMITE_TRECHOS = 30;
+  const trechos = [];
+  let pos = 0;
+  while (trechos.length < LIMITE_TRECHOS){
+    const idx = textoNorm.indexOf(termoNorm, pos);
+    if (idx === -1) break;
+    const inicio = Math.max(0, idx - RAIO);
+    const fim = Math.min(texto.length, idx + termo.length + RAIO);
+    const antes = escapeHtml(texto.slice(inicio, idx));
+    const achado = escapeHtml(texto.slice(idx, idx + termo.length));
+    const depois = escapeHtml(texto.slice(idx + termo.length, fim));
+    trechos.push(
+      `<div class="news-item">${inicio > 0 ? '…' : ''}${antes}<mark>${achado}</mark>${depois}${fim < texto.length ? '…' : ''}</div>`
+    );
+    pos = idx + termo.length;
+  }
+
+  if (trechos.length === 0){
+    resultadoEl.innerHTML = `<p class="indisponivel">Nenhum trecho encontrado com "${escapeHtml(termo)}" nesta proposta.</p>`;
+    return;
+  }
+  const aviso = trechos.length >= LIMITE_TRECHOS
+    ? `${LIMITE_TRECHOS}+ trechos encontrados — mostrando os primeiros ${LIMITE_TRECHOS}.`
+    : `${trechos.length} trecho(s) encontrado(s).`;
+  resultadoEl.innerHTML = `<div class="cpf-note" style="font-size:11px;color:var(--ink-soft);margin-bottom:8px;">${aviso}</div>${trechos.join('')}`;
+}
+
 function renderPropostaGoverno(candidato){
   const proposta = aoArray(candidato.propostas_governo)[0];
+  const cid = candidato.candidato_id;
+  if (proposta && proposta.texto_extraido) PROPOSTA_TEXTO_POR_CANDIDATO[cid] = proposta.texto_extraido;
   return `
     <div class="section-block">
       <h4>Proposta de governo (TSE)
@@ -640,10 +706,16 @@ function renderPropostaGoverno(candidato){
         <span class="info-popover" id="info-proposta-governo" hidden>Documento que o próprio candidato apresenta ao TSE no registro da candidatura, descrevendo o que pretende fazer se eleito. É texto do candidato, não uma checagem factual deste site.</span>
       </h4>
       ${proposta && proposta.texto_extraido ? `
-        <div id="proposta-preview" class="proposta-texto">${proposta.texto_extraido.slice(0, 500).replace(/\n/g,'<br>')}${proposta.texto_extraido.length > 500 ? '…' : ''}</div>
-        <div id="proposta-completa" class="proposta-texto" hidden>${proposta.texto_extraido.replace(/\n/g,'<br>')}</div>
-        ${proposta.texto_extraido.length > 500 ? `<button id="proposta-btn" class="auth-trocar-modo" style="margin-top:8px;" onclick="toggleProposta()">Ver proposta completa →</button>` : ''}
-        <div class="cpf-note" style="font-size:11px;color:var(--ink-soft);margin-top:8px;">Fonte: proposta de governo registrada no TSE. Extraído automaticamente do PDF oficial — pode conter pequenos erros de formatação.</div>
+        <input type="text" id="proposta-busca-${cid}" placeholder="Buscar na proposta (ex.: saúde, educação, segurança)…"
+          oninput="buscarNaProposta('${cid}')"
+          style="width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13.5px;margin-bottom:10px;">
+        <div id="proposta-resultado-busca-${cid}" hidden></div>
+        <div id="proposta-preview-${cid}" class="proposta-texto">${proposta.texto_extraido.slice(0, 500).replace(/\n/g,'<br>')}${proposta.texto_extraido.length > 500 ? '…' : ''}</div>
+        <div id="proposta-completa-wrap-${cid}">
+          <div id="proposta-completa-${cid}" class="proposta-texto" hidden>${proposta.texto_extraido.replace(/\n/g,'<br>')}</div>
+          ${proposta.texto_extraido.length > 500 ? `<button id="proposta-btn-${cid}" class="auth-trocar-modo" style="margin-top:8px;" onclick="toggleProposta('${cid}')">Ver proposta completa →</button>` : ''}
+        </div>
+        <div class="cpf-note" style="font-size:11px;color:var(--ink-soft);margin-top:8px;">Fonte: proposta de governo registrada no TSE. Extraído automaticamente do PDF oficial — pode conter pequenos erros de formatação. A busca acima olha o texto inteiro, não só a prévia.</div>
       ` : `<p class="indisponivel">Proposta de governo ainda não disponível para este candidato nesta base.</p>`}
     </div>`;
 }
