@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Metodologia — Observatório Eleitoral 2026</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%2312181A'/%3E%3Ccircle cx='16' cy='16' r='8' fill='%230E8A4D'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -150,7 +151,8 @@ incorpora a análise de elegibilidade prevista na Lei da Ficha Limpa
 <li>CPF/CNPJ do doador é mascarado antes de qualquer persistência, mesma regra de LGPD aplicada ao CPF do próprio candidato (ver §6).</li>
 <li>Sem chave de linha estável nesta fonte do TSE: a cada atualização, o conjunto de receitas de um candidato é recarregado por completo (não é incremental linha a linha).</li>
 </ul>
-<h3>3.5 Imprensa</h3>
+<h3>3.5 Imprensa — descontinuado</h3>
+<p style="font-size:13.5px;color:var(--ink-soft);"><strong>Descontinuado em 2026-09-03</strong> (ver <code>REVISAO_JURIDICA.md</code> §2.5, no repositório do pipeline). Era a única funcionalidade do projeto que republica conteúdo de terceiro (manchete de notícia) associado a uma pessoa nomeada antes de qualquer revisão — o único risco estrutural de calúnia/difamação do projeto, e confirmar a base legal disso exige parecer jurídico que o projeto não tem orçamento para contratar agora. A automação foi desligada (sem cron ativo); o código e a fila de revisão humana continuam existindo como referência técnica, mas nada novo é adicionado nem publicado. As regras abaixo descrevem o desenho original, mantidas apenas como documentação histórica:</p>
 <ul>
 <li>Critério de inclusão: veículo precisa ter (a) CNPJ de empresa jornalística, (b) conselho editorial identificável, (c) histórico de correções públicas.</li>
 <li>Prioridade a agências de checagem filiadas à <strong>IFCN</strong> (Aos Fatos, Lupa, Comprova, Agência Pública).</li>
@@ -215,17 +217,19 @@ registro de candidatura, sem interpretação própria.</p>
 <li>Toda linguagem valorativa ("corrupto", "honesto", "melhor opção") é proibida no corpo do site — usa-se apenas linguagem de registro ("réu em processo nº X, TJ-SP").</li>
 <li>Revisão cruzada: dado sensível (status judicial) exige duas fontes independentes antes de publicação.</li>
 <li>Auditoria externa: changelog público + canal de contestação para candidatos e eleitores reportarem erro.</li>
+<li><strong>Regra permanente, não apenas estado atual</strong> (adicionada em 2026-09-03, ver <code>REVISAO_JURIDICA.md</code>): o projeto não tem orçamento para parecer jurídico eleitoral contínuo, então opera na postura mais conservadora possível de forma <strong>indefinida</strong>, não só até "arranjar advogado": nunca ranking, nunca "candidato recomendado", nunca conteúdo pago/impulsionado, nunca qualquer forma de apoio ou crítica a candidato específico. Qualquer funcionalidade nova só entra no ar se continuar dentro dessas 4 regras sem exceção.</li>
 </ol>
 <hr />
 <h2>6. Aspectos legais (Brasil)</h2>
 <ul>
-<li><strong>LGPD (Lei 13.709/2018)</strong>: dado sobre processo judicial é dado pessoal sensível. Tratamento se ampara no art. 7º/11 (execução de política pública / exercício regular de direitos, considerando finalidade de transparência eleitoral e interesse público, art. 23) e deve restringir-se a <strong>dados já públicos por natureza</strong> (autos públicos, portais oficiais). Dados sob sigilo de justiça não podem ser coletados nem exibidos.</li>
-<li><strong>Resoluções do TSE sobre propaganda eleitoral</strong>: um site de "comparação de candidatos" pode ser enquadrado como propaganda eleitoral extemporânea ou impulsionamento se não for estritamente informativo. Recomenda-se parecer jurídico antes do lançamento, registro como iniciativa de imprensa/jornalismo de dados ou como pessoa jurídica sem fins lucrativos de fiscalização, e disclaimer de não vinculação a candidato, partido ou coligação.</li>
-<li><strong>Risco de responsabilização civil (calúnia/difamação)</strong>: mitigado por citação de fonte oficial/documental em cada afirmação e pelo campo de direito de resposta.</li>
-<li><strong>Marco Civil da Internet (Lei 12.965/2014)</strong>: aplicável à moderação de comentários/contestações, se houver espaço interativo no site.</li>
+<li><strong>LGPD (Lei 13.709/2018)</strong>: dado sobre processo judicial é dado pessoal sensível. Tratamento se ampara no art. 7º/11 (execução de política pública / exercício regular de direitos, considerando finalidade de transparência eleitoral e interesse público, art. 23) e deve restringir-se a <strong>dados já públicos por natureza</strong> (autos públicos, portais oficiais). Dados sob sigilo de justiça não podem ser coletados nem exibidos. <strong>Atualização 2026-09-03</strong>: a única coleta de dado pessoal de usuário do site (conta de login) foi eliminada — a colinha pessoal passou a ser salva só no navegador do usuário (localStorage), sem e-mail/senha nem qualquer conta.</li>
+<li><strong>Resoluções do TSE sobre propaganda eleitoral</strong>: um site de "comparação de candidatos" pode em tese ser enquadrado como propaganda eleitoral extemporânea ou impulsionamento. <strong>Atualização 2026-09-03</strong>: o site foi ao ar em 31/08/2026, dentro da janela de propaganda eleitoral 2026 (que abre 16/08 — Res. TSE 23.760/2026), não antes dela; e propaganda eleitoral, por definição normativa, é manifestação de candidato/partido/coligação a favor de si mesmo, não de agregador de terceiro sem vínculo. Isso reduz o risco mas não o elimina — sem orçamento para confirmação formal por advogado eleitoral, o projeto adota em caráter permanente a postura descrita no item 6 da seção 5 acima como sua mitigação definitiva.</li>
+<li><strong>Risco de responsabilização civil (calúnia/difamação)</strong>: mitigado por citação de fonte oficial/documental em cada afirmação e pelo campo de direito de resposta. A única funcionalidade que envolvia republicar conteúdo de terceiro sobre pessoa nomeada antes de revisão (cobertura de imprensa, §3.5) foi <strong>descontinuada em 2026-09-03</strong> por esse motivo — era o único ponto de risco estrutural dessa natureza no projeto.</li>
+<li><strong>Marco Civil da Internet (Lei 12.965/2014)</strong>: aplicável à moderação do canal de contestação. Prazo de resposta declarado (5 dias úteis, ver formulário) e compromisso de remover prontamente qualquer conteúdo reportado como potencialmente ilícito, mesmo antes da resposta formal — moderação prévia à publicação já impede que conteúdo de terceiro fique público sem checagem.</li>
+<li><strong>Resposta a incidente de segurança (LGPD art. 48)</strong>: ver <code>PLANO_RESPOSTA_INCIDENTE.md</code> no repositório do pipeline — procedimento básico documentado em 2026-09-03, sem revisão jurídica formal ainda.</li>
 </ul>
 <blockquote>
-<p>Este documento <strong>não substitui assessoria jurídica</strong>. Antes de publicar dados judiciais de pessoas nomeadas, é recomendável revisão por advogado especializado em direito eleitoral e proteção de dados.</p>
+<p>Este documento <strong>não substitui assessoria jurídica</strong>. Sem orçamento disponível para um parecer formal, o projeto optou por remover ou desligar tudo que dependia de julgamento jurídico específico (ver histórico em <code>REVISAO_JURIDICA.md</code>) em vez de operar com risco não avaliado — a lista acima reflete decisões técnicas conservadoras tomadas nesse contexto, não uma opinião jurídica de que estejam corretas.</p>
 </blockquote>
 <hr />
 <h2>7. Pipeline técnico sugerido</h2>
