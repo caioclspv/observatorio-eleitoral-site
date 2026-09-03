@@ -697,20 +697,25 @@ document.getElementById('urnaTrocarEstado').addEventListener('click', () => {
 // Limpa) para o registro; "INDEFERIDO"/"CASSADO" significa que o TSE
 // impugnou o registro. Enquanto não há decisão, mostramos "em análise"
 // — nunca se lê ausência de decisão como "Ficha Limpa confirmada".
+// `curto` alimenta o badge repetido em cada card da grade — com dezenas
+// de candidatos "em análise" (normal antes da eleição), a frase inteira
+// repetida em toda ficha poluía a navegação. `label` (frase completa)
+// fica só pro title do badge, o dossiê e a legenda, onde aparece 1 vez.
 function classificarFichaLimpa(situacao, detalhe){
   const s = (situacao || '').toUpperCase();
   const d = (detalhe || '').toUpperCase();
   if (!s || s === '#NE' || s === '#NULO#') {
-    return { status: 'pending', label: 'Registro em análise pelo TSE' };
+    return { status: 'pending', curto: 'Em análise', label: 'Registro em análise pelo TSE' };
   }
   if (s.includes('INDEFERIDO') || s.includes('CASSADO') || d.includes('INDEFERIDO') || d.includes('CASSADO')) {
-    return { status: 'confirmed', label: 'Registro impugnado pelo TSE' };
+    return { status: 'confirmed', curto: 'Impugnado', label: 'Registro impugnado pelo TSE' };
   }
   if (s.includes('DEFERIDO')) {
-    return { status: 'verified', label: 'Ficha Limpa — registro aprovado pelo TSE' };
+    return { status: 'verified', curto: 'Ficha Limpa', label: 'Ficha Limpa — registro aprovado pelo TSE' };
   }
   // Outros casos (renúncia, falecimento, substituição etc.) — informativo, não é status de Ficha Limpa
-  return { status: 'neutral', label: situacaoLegivel(situacao) };
+  const curto = situacaoLegivel(situacao);
+  return { status: 'neutral', curto, label: curto };
 }
 
 // Tooltips de termos jurídicos (funciona por toque, não só passar o
@@ -880,7 +885,7 @@ function toggleFinanciamento(){
 function statusBadge(info){
   const map = { verified:'verified', pending:'pending', confirmed:'confirmed', neutral:'neutral' };
   const cls = map[info.status] || 'neutral';
-  return `<span class="badge ${cls}"><i class="dot ${cls}" style="width:6px;height:6px;"></i>${info.label}</span>`;
+  return `<span class="badge ${cls}" title="${info.label}"><i class="dot ${cls}" style="width:6px;height:6px;"></i>${info.curto}</span>`;
 }
 
 async function buscarPagina(reset){
