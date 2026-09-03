@@ -202,11 +202,21 @@
   .completude{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;}
   .completude-item{display:flex;align-items:center;gap:4px;color:var(--ink-soft);}
   .completude-item.pronto{color:var(--verified);}
-  .completude-item .marca{font-size:11px;}  @media print{
+  .completude-item .marca{font-size:11px;}
+
+  #colinhaPrintHeader{display:none;}
+
+  @media print{
+    @page{ margin: 1.6cm; }
     body *{visibility:hidden;}
     .modal-box-larga, .modal-box-larga *{visibility:visible;}
-    .modal-box-larga{position:fixed;top:0;left:0;box-shadow:none;max-height:none;overflow:visible;}
-    .modal-close, #btnImprimirColinha{display:none;}
+    .modal-box-larga{position:static;max-width:none;max-height:none;overflow:visible;box-shadow:none;padding:0;margin:0;border-radius:0;}
+    .modal-close, #btnImprimirColinha, .modal-sub{display:none;}
+    #colinhaPrintHeader{display:block;margin-bottom:18px;}
+    #colinhaPrintHeader h2{font-size:18px;}
+    #colinhaPrintHeader p{font-size:11px;color:#555;margin-top:4px;}
+    .colinha-slot{border:none;border-bottom:1px solid #ccc;border-radius:0;padding:10px 0;page-break-inside:avoid;}
+    .colinha-slot button{display:none;}
   }
 </style>
 </head>
@@ -252,7 +262,11 @@
   <div class="modal-box modal-box-larga">
     <button class="modal-close" onclick="fecharColinha()">✕</button>
     <h2>Minha colinha</h2>
-    <p class="modal-sub">Um candidato por cargo — a mesma escolha que você levaria pra urna. Fonte de zona eleitoral: <a class="fonte-link" href="https://www.tse.jus.br/eleitor-e-eleicoes/titulo-de-eleitor/local-de-votacao" target="_blank">consulte no site oficial do TSE ↗</a> (não coletamos CPF/título de eleitor aqui).</p>
+    <p class="modal-sub">A mesma escolha que você levaria pra urna — um candidato por cargo, exceto Senador (2026 tem 2 vagas em disputa, então dá pra guardar até 2). Fonte de zona eleitoral: <a class="fonte-link" href="https://www.tse.jus.br/eleitor-e-eleicoes/titulo-de-eleitor/local-de-votacao" target="_blank">consulte no site oficial do TSE ↗</a> (não coletamos CPF/título de eleitor aqui).</p>
+    <div id="colinhaPrintHeader">
+      <h2>Minha colinha — Observatório Eleitoral 2026</h2>
+      <p id="colinhaPrintData"></p>
+    </div>
     <div id="colinhaSlots"></div>
     <button id="btnImprimirColinha" class="load-more" style="margin-top:16px;">Imprimir / salvar como PDF</button>
   </div>
@@ -425,25 +439,62 @@ async function sair(){
 }
 
 // ---------- Colinha ----------
+// `vagas`: quantas escolhas o cargo comporta. Hoje só Senador tem mais de
+// uma — 2026 elege 2 vagas de senador por estado, e o TSE não pré-atribui
+// candidato a "vaga 1" ou "vaga 2" (é 1 cargo só, os 2 mais votados
+// ganham — ver dadosabertos.tse.jus.br/dataset/candidatos-2026). Por isso
+// os 2 slots aqui são só a ordem em que o usuário escolheu, não uma vaga
+// oficial — ver também schema_supabase.sql.
 const CARGOS_COLINHA = [
-  { chave: 'presidente', label: 'Presidente' },
-  { chave: 'governador', label: 'Governador' },
-  { chave: 'senador', label: 'Senador' },
-  { chave: 'dep_federal', label: 'Deputado Federal' },
-  { chave: 'dep_estadual', label: 'Deputado Estadual' },
+  { chave: 'presidente', label: 'Presidente', vagas: 1 },
+  { chave: 'governador', label: 'Governador', vagas: 1 },
+  { chave: 'senador', label: 'Senador', vagas: 2 },
+  { chave: 'dep_federal', label: 'Deputado Federal', vagas: 1 },
+  { chave: 'dep_estadual', label: 'Deputado Estadual', vagas: 1 },
 ];
 
 async function adicionarNaColinha(candidatoId, cargo){
   if (!usuarioAtual) { abrirModalAuth(false); return; }
+  const info = CARGOS_COLINHA.find(c => c.chave === cargo);
+  const vagas = (info && info.vagas) || 1;
+
+  if (vagas === 1){
+    const { error } = await sb.from('colinha_itens').upsert({
+      user_id: usuarioAtual.id, cargo, candidato_id: candidatoId, slot: 1,
+    }, { onConflict: 'user_id,cargo,slot' });
+    if (error) { alert('Não foi possível salvar na colinha agora: ' + error.message); return; }
+    alert('Adicionado à sua colinha!');
+    return;
+  }
+
+  const { data: existentes, error: erroConsulta } = await sb.from('colinha_itens')
+    .select('slot, candidato_id').eq('user_id', usuarioAtual.id).eq('cargo', cargo);
+  if (erroConsulta) { alert('Não foi possível salvar na colinha agora: ' + erroConsulta.message); return; }
+
+  if ((existentes || []).some(e => e.candidato_id === candidatoId)) {
+    alert('Este candidato já está na sua colinha.');
+    return;
+  }
+
+  const slotsUsados = (existentes || []).map(e => e.slot);
+  let slotLivre = null;
+  for (let s = 1; s <= vagas; s++) { if (!slotsUsados.includes(s)) { slotLivre = s; break; } }
+
+  if (slotLivre === null) {
+    alert(`Sua colinha já tem ${vagas} escolhas de ${info.label.toLowerCase()}. Abra "Minha colinha" e remova uma antes de adicionar outra.`);
+    return;
+  }
+
   const { error } = await sb.from('colinha_itens').upsert({
-    user_id: usuarioAtual.id, cargo, candidato_id: candidatoId,
-  }, { onConflict: 'user_id,cargo' });
+    user_id: usuarioAtual.id, cargo, candidato_id: candidatoId, slot: slotLivre,
+  }, { onConflict: 'user_id,cargo,slot' });
   if (error) { alert('Não foi possível salvar na colinha agora: ' + error.message); return; }
   alert('Adicionado à sua colinha!');
 }
 
-async function removerDaColinha(cargo){
-  await sb.from('colinha_itens').delete().eq('user_id', usuarioAtual.id).eq('cargo', cargo);
+async function removerDaColinha(cargo, slot){
+  await sb.from('colinha_itens').delete()
+    .eq('user_id', usuarioAtual.id).eq('cargo', cargo).eq('slot', slot);
   abrirColinha();
 }
 
@@ -454,24 +505,29 @@ async function abrirColinha(){
   slotsEl.innerHTML = '<div class="loading">Carregando sua colinha…</div>';
 
   const { data, error } = await sb.from('colinha_itens')
-    .select('cargo, candidato_id, candidatos(nome_urna, numero_urna, partido, uf)')
+    .select('cargo, slot, candidato_id, candidatos(nome_urna, numero_urna, partido, uf)')
     .eq('user_id', usuarioAtual.id);
 
   if (error) { slotsEl.innerHTML = `<div class="erro-carga">${error.message}</div>`; return; }
 
-  const porCargo = Object.fromEntries((data || []).map(d => [d.cargo, d]));
-  slotsEl.innerHTML = CARGOS_COLINHA.map(({chave, label}) => {
-    const item = porCargo[chave];
-    return `
-    <div class="colinha-slot">
-      <div>
-        <div class="cargo-label">${label}</div>
-        ${item ? `<div class="escolha">Nº ${item.candidatos.numero_urna} — ${item.candidatos.nome_urna} (${item.candidatos.partido || '—'})</div>`
-               : `<div class="vazio">Ainda não escolhido</div>`}
-      </div>
-      ${item ? `<button onclick="removerDaColinha('${chave}')">Remover</button>` : ''}
-    </div>`;
-  }).join('');
+  const porCargoSlot = {};
+  (data || []).forEach(d => { porCargoSlot[`${d.cargo}:${d.slot}`] = d; });
+
+  slotsEl.innerHTML = CARGOS_COLINHA.flatMap(({chave, label, vagas}) =>
+    Array.from({length: vagas}, (_, i) => i + 1).map(slot => {
+      const item = porCargoSlot[`${chave}:${slot}`];
+      const rotulo = vagas > 1 ? `${label} — escolha ${slot}` : label;
+      return `
+      <div class="colinha-slot">
+        <div>
+          <div class="cargo-label">${rotulo}</div>
+          ${item ? `<div class="escolha">Nº ${item.candidatos.numero_urna} — ${item.candidatos.nome_urna} (${item.candidatos.partido || '—'})</div>`
+                 : `<div class="vazio">Ainda não escolhido</div>`}
+        </div>
+        ${item ? `<button onclick="removerDaColinha('${chave}',${slot})">Remover</button>` : ''}
+      </div>`;
+    })
+  ).join('');
 }
 function fecharColinha(){ document.getElementById('colinhaOverlay').style.display = 'none'; }
 
@@ -1130,7 +1186,11 @@ document.getElementById('btnMinhaColinha').addEventListener('click', abrirColinh
 document.getElementById('btnSair').addEventListener('click', sair);
 document.getElementById('authTrocarModo').addEventListener('click', () => abrirModalAuth(!authModoCadastro));
 document.getElementById('authSubmit').addEventListener('click', submeterAuth);
-document.getElementById('btnImprimirColinha').addEventListener('click', () => window.print());
+document.getElementById('btnImprimirColinha').addEventListener('click', () => {
+  document.getElementById('colinhaPrintData').textContent =
+    `Gerada em ${new Date().toLocaleDateString('pt-BR')} · dados oficiais TSE/Câmara/Senado`;
+  window.print();
+});
 document.getElementById('authSenhaInput').addEventListener('keydown', e => { if (e.key === 'Enter') submeterAuth(); });
 
 (async function init(){
