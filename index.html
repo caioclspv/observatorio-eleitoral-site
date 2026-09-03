@@ -42,7 +42,6 @@
   .auth-link{background:none;border:none;color:#9FC7AE;font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;cursor:pointer;padding:6px 4px;min-height:32px;}
   .auth-link:hover{color:#fff;}
   .auth-link-destaque{color:#fff;font-weight:600;}
-  .auth-email{color:#6E9880;font-family:'IBM Plex Mono',monospace;font-size:11px;margin-right:4px;}
 
   .modal-overlay{position:fixed;inset:0;background:rgba(18,24,26,.55);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;}
   .modal-box{background:var(--papel);border-radius:16px;padding:28px;max-width:380px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.3);position:relative;}
@@ -50,9 +49,6 @@
   .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:16px;cursor:pointer;color:var(--ink-soft);min-height:32px;min-width:32px;}
   .modal-box h2{font-size:22px;margin-bottom:6px;}
   .modal-sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:18px;line-height:1.5;}
-  .modal-box input{width:100%;padding:12px 14px;border:1px solid var(--linha);border-radius:8px;margin-bottom:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;}
-  .auth-erro{color:var(--confirmed);font-size:12.5px;margin-bottom:10px;min-height:16px;}
-  .auth-trocar-modo{display:block;width:100%;background:none;border:none;color:var(--accent);font-size:12.5px;text-decoration:underline;cursor:pointer;margin-top:12px;padding:8px;}
 
   .colinha-slot{border:1px solid var(--linha);border-radius:10px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
   .colinha-slot .cargo-label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;color:var(--ink-soft);letter-spacing:.05em;}
@@ -226,7 +222,7 @@
        página inteira (hero, grade de candidatos carregada, footer) virava
        páginas em branco atrás do modal. Isso é o que gerava 6 páginas de
        impressão praticamente vazias. */
-    .auth-bar, .hero-urna, #urnaView, #explorarView, main, footer, #authModalOverlay{display:none !important;}
+    .auth-bar, .hero-urna, #urnaView, #explorarView, main, footer{display:none !important;}
     #colinhaOverlay{position:static !important;display:block !important;background:none;padding:0;inset:auto;}
     .modal-box-larga{position:static;max-width:none;max-height:none;overflow:visible;box-shadow:none;padding:0;margin:0;border-radius:0;}
     .modal-close, #btnImprimirColinha, .modal-sub{display:none;}
@@ -254,27 +250,9 @@
       <a href="metodologia.html">Metodologia</a>
       <a href="changelog.html">Changelog</a>
     </nav>
-    <div id="authLoggedOut">
-      <button id="btnEntrar" class="auth-link">Entrar / Criar conta</button>
-    </div>
-    <div id="authLoggedIn" style="display:none">
-      <span id="authEmail" class="auth-email"></span>
+    <div class="auth-link-area">
       <button id="btnMinhaColinha" class="auth-link auth-link-destaque">Minha colinha</button>
-      <button id="btnSair" class="auth-link">Sair</button>
     </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="authModalOverlay" style="display:none">
-  <div class="modal-box">
-    <button class="modal-close" onclick="fecharModalAuth()">✕</button>
-    <h2 id="authModalTitulo">Entrar</h2>
-    <p class="modal-sub">Sua colinha fica salva com segurança — só você vê suas escolhas.</p>
-    <input type="email" id="authEmailInput" placeholder="seu@email.com" autocomplete="email">
-    <input type="password" id="authSenhaInput" placeholder="Senha (mínimo 6 caracteres)" autocomplete="current-password">
-    <div id="authErro" class="auth-erro"></div>
-    <button id="authSubmit" class="btn-confirma" style="width:100%;">Entrar</button>
-    <button id="authTrocarModo" class="auth-trocar-modo">Ainda não tem conta? Criar uma agora</button>
   </div>
 </div>
 
@@ -282,7 +260,7 @@
   <div class="modal-box modal-box-larga">
     <button class="modal-close" onclick="fecharColinha()">✕</button>
     <h2>Minha colinha</h2>
-    <p class="modal-sub">A mesma escolha que você levaria pra urna — um candidato por cargo, exceto Senador (2026 tem 2 vagas em disputa, então dá pra guardar até 2). Fonte de zona eleitoral: <a class="fonte-link" href="https://www.tse.jus.br/eleitor-e-eleicoes/titulo-de-eleitor/local-de-votacao" target="_blank">consulte no site oficial do TSE ↗</a> (não coletamos CPF/título de eleitor aqui).</p>
+    <p class="modal-sub">A mesma escolha que você levaria pra urna — um candidato por cargo, exceto Senador (2026 tem 2 vagas em disputa, então dá pra guardar até 2). Salva só neste navegador, sem conta e sem nenhum dado saindo da sua máquina — troque de aparelho ou navegador e ela não acompanha (imprima ou tire print pra levar). Fonte de zona eleitoral: <a class="fonte-link" href="https://www.tse.jus.br/eleitor-e-eleicoes/titulo-de-eleitor/local-de-votacao" target="_blank">consulte no site oficial do TSE ↗</a> (não coletamos CPF/título de eleitor aqui).</p>
     <div id="colinhaPrintHeader">
       <h2>Minha colinha — Observatório Eleitoral 2026</h2>
       <p id="colinhaPrintData"></p>
@@ -408,59 +386,24 @@ if (typeof supabase === 'undefined') {
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-// ---------- Autenticação (e-mail/senha via Supabase Auth) ----------
-// Nenhum CPF/título de eleitor é coletado — só e-mail e senha, para
-// permitir salvar a colinha pessoal de cada usuário com segurança.
-let usuarioAtual = null;
-let authModoCadastro = false;
-
-function atualizarBarraAuth(){
-  const logado = !!usuarioAtual;
-  document.getElementById('authLoggedOut').style.display = logado ? 'none' : 'block';
-  document.getElementById('authLoggedIn').style.display = logado ? 'flex' : 'none';
-  if (logado) document.getElementById('authEmail').textContent = usuarioAtual.email;
-}
-
-function abrirModalAuth(cadastro){
-  authModoCadastro = cadastro;
-  document.getElementById('authModalTitulo').textContent = cadastro ? 'Criar conta' : 'Entrar';
-  document.getElementById('authSubmit').textContent = cadastro ? 'Criar conta' : 'Entrar';
-  document.getElementById('authTrocarModo').textContent = cadastro ? 'Já tem conta? Entrar' : 'Ainda não tem conta? Criar uma agora';
-  document.getElementById('authErro').textContent = '';
-  document.getElementById('authModalOverlay').style.display = 'flex';
-}
-function fecharModalAuth(){ document.getElementById('authModalOverlay').style.display = 'none'; }
-
-async function submeterAuth(){
-  const email = document.getElementById('authEmailInput').value.trim();
-  const senha = document.getElementById('authSenhaInput').value;
-  const erroEl = document.getElementById('authErro');
-  erroEl.textContent = '';
-  if (!email || senha.length < 6) {
-    erroEl.textContent = 'Preencha um e-mail válido e uma senha de pelo menos 6 caracteres.';
-    return;
-  }
-  const { data, error } = authModoCadastro
-    ? await sb.auth.signUp({ email, password: senha })
-    : await sb.auth.signInWithPassword({ email, password: senha });
-  if (error) { erroEl.textContent = error.message; return; }
-  if (authModoCadastro && data.user && !data.session) {
-    erroEl.style.color = 'var(--verified)';
-    erroEl.textContent = 'Conta criada — confira seu e-mail para confirmar antes de entrar.';
-    return;
-  }
-  usuarioAtual = data.user;
-  atualizarBarraAuth();
-  fecharModalAuth();
-}
-
-async function sair(){
-  await sb.auth.signOut();
-  usuarioAtual = null;
-  atualizarBarraAuth();
-}
-
 // ---------- Colinha ----------
+// Guardada no navegador do próprio usuário (localStorage), não numa
+// conta — decisão tomada pra eliminar a coleta de e-mail/senha sem
+// necessidade real (o login só existia pra isso). Nada sai da máquina
+// do usuário; a única perda é não sincronizar entre dispositivos.
+const COLINHA_LOCAL_KEY = 'colinha_local_v1';
+
+function _lerColinhaLocal(){
+  try {
+    const bruto = localStorage.getItem(COLINHA_LOCAL_KEY);
+    const itens = bruto ? JSON.parse(bruto) : [];
+    return Array.isArray(itens) ? itens : [];
+  } catch { return []; }
+}
+function _salvarColinhaLocal(itens){
+  try { localStorage.setItem(COLINHA_LOCAL_KEY, JSON.stringify(itens)); }
+  catch { alert('Não foi possível salvar a colinha neste navegador (armazenamento local bloqueado ou cheio).'); }
+}
 // `vagas`: quantas escolhas o cargo comporta. Hoje só Senador tem mais de
 // uma — 2026 elege 2 vagas de senador por estado, e o TSE não pré-atribui
 // candidato a "vaga 1" ou "vaga 2" (é 1 cargo só, os 2 mais votados
@@ -475,85 +418,77 @@ const CARGOS_COLINHA = [
   { chave: 'dep_estadual', label: 'Deputado Estadual', vagas: 1 },
 ];
 
-async function adicionarNaColinha(candidatoId, cargo){
-  if (!usuarioAtual) { abrirModalAuth(false); return; }
+function adicionarNaColinha(candidatoId, cargo){
   const info = CARGOS_COLINHA.find(c => c.chave === cargo);
   const vagas = (info && info.vagas) || 1;
+  const itens = _lerColinhaLocal();
+  const existentes = itens.filter(i => i.cargo === cargo);
 
-  if (vagas === 1){
-    const { error } = await sb.from('colinha_itens').upsert({
-      user_id: usuarioAtual.id, cargo, candidato_id: candidatoId, slot: 1,
-    }, { onConflict: 'user_id,cargo,slot' });
-    if (error) { alert('Não foi possível salvar na colinha agora: ' + error.message); return; }
-    alert('Adicionado à sua colinha!');
-    return;
-  }
-
-  const { data: existentes, error: erroConsulta } = await sb.from('colinha_itens')
-    .select('slot, candidato_id').eq('user_id', usuarioAtual.id).eq('cargo', cargo);
-  if (erroConsulta) { alert('Não foi possível salvar na colinha agora: ' + erroConsulta.message); return; }
-
-  if ((existentes || []).some(e => e.candidato_id === candidatoId)) {
+  if (existentes.some(e => e.candidato_id === candidatoId)) {
     alert('Este candidato já está na sua colinha.');
     return;
   }
 
-  const slotsUsados = (existentes || []).map(e => e.slot);
+  const slotsUsados = existentes.map(e => e.slot);
   let slotLivre = null;
   for (let s = 1; s <= vagas; s++) { if (!slotsUsados.includes(s)) { slotLivre = s; break; } }
 
   if (slotLivre === null) {
-    alert(`Sua colinha já tem ${vagas} escolhas de ${info.label.toLowerCase()}. Abra "Minha colinha" e remova uma antes de adicionar outra.`);
+    alert(vagas > 1
+      ? `Sua colinha já tem ${vagas} escolhas de ${info.label.toLowerCase()}. Abra "Minha colinha" e remova uma antes de adicionar outra.`
+      : 'Já existe uma escolha para este cargo — abra "Minha colinha" pra trocar.');
     return;
   }
 
-  const { error } = await sb.from('colinha_itens').upsert({
-    user_id: usuarioAtual.id, cargo, candidato_id: candidatoId, slot: slotLivre,
-  }, { onConflict: 'user_id,cargo,slot' });
-  if (error) { alert('Não foi possível salvar na colinha agora: ' + error.message); return; }
+  const semEsseCargoSlot = itens.filter(i => !(i.cargo === cargo && i.slot === slotLivre));
+  semEsseCargoSlot.push({ cargo, slot: slotLivre, candidato_id: candidatoId });
+  _salvarColinhaLocal(semEsseCargoSlot);
   alert('Adicionado à sua colinha!');
 }
 
-async function removerDaColinha(cargo, slot){
-  await sb.from('colinha_itens').delete()
-    .eq('user_id', usuarioAtual.id).eq('cargo', cargo).eq('slot', slot);
+function removerDaColinha(cargo, slot){
+  const itens = _lerColinhaLocal().filter(i => !(i.cargo === cargo && i.slot === slot));
+  _salvarColinhaLocal(itens);
   abrirColinha();
 }
 
 async function abrirColinha(){
-  if (!usuarioAtual) { abrirModalAuth(false); return; }
   document.getElementById('colinhaOverlay').style.display = 'flex';
   const slotsEl = document.getElementById('colinhaSlots');
   slotsEl.innerHTML = '<div class="loading">Carregando sua colinha…</div>';
 
-  const { data, error } = await sb.from('colinha_itens')
-    .select('cargo, slot, candidato_id, candidatos(nome_urna, numero_urna, partido, uf)')
-    .eq('user_id', usuarioAtual.id);
-
-  if (error) { slotsEl.innerHTML = `<div class="erro-carga">${error.message}</div>`; return; }
+  const itens = _lerColinhaLocal();
+  const ids = [...new Set(itens.map(i => i.candidato_id))];
+  let candidatosPorId = {};
+  if (ids.length > 0) {
+    const { data, error } = await sb.from('candidatos')
+      .select('candidato_id, nome_urna, numero_urna, partido').in('candidato_id', ids);
+    if (error) { slotsEl.innerHTML = `<div class="erro-carga">${error.message}</div>`; return; }
+    candidatosPorId = Object.fromEntries((data || []).map(c => [c.candidato_id, c]));
+  }
 
   const porCargoSlot = {};
-  (data || []).forEach(d => { porCargoSlot[`${d.cargo}:${d.slot}`] = d; });
+  itens.forEach(i => { porCargoSlot[`${i.cargo}:${i.slot}`] = candidatosPorId[i.candidato_id]; });
 
   slotsEl.innerHTML = CARGOS_COLINHA.flatMap(({chave, label, vagas}) =>
     Array.from({length: vagas}, (_, i) => i + 1).map(slot => {
-      const item = porCargoSlot[`${chave}:${slot}`];
+      const cand = porCargoSlot[`${chave}:${slot}`];
       const rotulo = vagas > 1 ? `${label} — escolha ${slot}` : label;
       return `
       <div class="colinha-slot">
         <div>
           <div class="cargo-label">${rotulo}</div>
-          ${item ? `
+          ${cand ? `
             <div class="colinha-principal">
-              <span class="colinha-numero">${item.candidatos.numero_urna}</span>
+              <span class="colinha-numero">${cand.numero_urna}</span>
               <div>
-                <div class="escolha">${item.candidatos.nome_urna}</div>
-                <div class="colinha-partido">${item.candidatos.partido || '—'}</div>
+                <div class="escolha">${cand.nome_urna}</div>
+                <div class="colinha-partido">${cand.partido || '—'}</div>
               </div>
             </div>`
                  : `<div class="vazio">Ainda não escolhido</div>`}
         </div>
-        ${item ? `<button onclick="removerDaColinha('${chave}',${slot})">Remover</button>` : ''}
+        ${cand ? `<button onclick="removerDaColinha('${chave}',${slot})">Remover</button>` : ''}
       </div>`;
     })
   ).join('');
@@ -1215,31 +1150,16 @@ document.getElementById('compareToggle').addEventListener('change', e => {
 loadMoreBtn.addEventListener('click', () => { currentPage++; buscarPagina(false); });
 
 document.getElementById('hintColinha').addEventListener('click', abrirColinha);
-document.getElementById('btnEntrar').addEventListener('click', () => abrirModalAuth(false));
 document.getElementById('btnMinhaColinha').addEventListener('click', abrirColinha);
-document.getElementById('btnSair').addEventListener('click', sair);
-document.getElementById('authTrocarModo').addEventListener('click', () => abrirModalAuth(!authModoCadastro));
-document.getElementById('authSubmit').addEventListener('click', submeterAuth);
 document.getElementById('btnImprimirColinha').addEventListener('click', () => {
   document.getElementById('colinhaPrintData').textContent =
     `Gerada em ${new Date().toLocaleDateString('pt-BR')} · dados oficiais TSE/Câmara/Senado`;
   window.print();
 });
-document.getElementById('authSenhaInput').addEventListener('keydown', e => { if (e.key === 'Enter') submeterAuth(); });
 
 (async function init(){
   if (!sb) return; // já mostramos o motivo acima (CDN não carregou)
   popularUFs();
-
-  const { data: sessaoAtual } = await sb.auth.getSession();
-  if (sessaoAtual?.session) {
-    usuarioAtual = sessaoAtual.session.user;
-    atualizarBarraAuth();
-  }
-  sb.auth.onAuthStateChange((_evento, sessao) => {
-    usuarioAtual = sessao ? sessao.user : null;
-    atualizarBarraAuth();
-  });
 
   try {
     const { error } = await sb.from('candidatos').select('candidato_id', { count: 'exact', head: true });
