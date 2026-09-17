@@ -1170,8 +1170,8 @@ async function openDossie(candidatoId){
         </div>
         <div class="section-block">
           <h4>Bens declarados (TSE)</h4>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;">${fmtMoeda(candidato.bens_declarados_total) || 'Não declarado'}</div>
-          <div class="cpf-note" style="font-size:11px;color:var(--ink-soft);margin-top:4px;">Valor total declarado. Detalhamento item a item ainda não incluído nesta versão do banco.</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;">${fmtMoeda(candidato.bens_declarados_total) || 'Sem registro no TSE'}</div>
+          <div class="cpf-note" style="font-size:11px;color:var(--ink-soft);margin-top:4px;">${candidato.bens_declarados_total != null ? 'Valor total declarado. Detalhamento item a item ainda não incluído nesta versão do banco.' : 'O TSE não tem nenhum bem registrado pra este candidato no lote consultado — isso pode ser porque o candidato declarou zero bens, ou porque o dado ainda não está disponível. Não significa necessariamente "zero".'}</div>
         </div>
         ${renderFinanciamentoCampanha(candidato)}
         ${['presidente','governador'].includes(candidato.cargo) ? renderPropostaGoverno(candidato) : ''}
