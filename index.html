@@ -98,6 +98,27 @@
     text-decoration:underline;cursor:pointer;padding:0;min-height:auto;}
   .hero-features-hint button:hover{color:#fff;}
 
+  .cargos-explicados{background:var(--papel);border-bottom:1px solid var(--line);}
+  .cargos-explicados-toggle{display:flex;align-items:center;gap:10px;width:100%;max-width:1180px;margin:0 auto;
+    padding:16px 32px;background:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:700;
+    font-size:15px;color:var(--tinta);text-align:left;min-height:44px;}
+  .cargos-explicados-toggle .seta{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:12px;
+    color:var(--ink-soft);transition:transform .15s ease;flex-shrink:0;}
+  .cargos-explicados-toggle[aria-expanded="true"] .seta{transform:rotate(180deg);}
+  .cargos-explicados-conteudo{max-width:1180px;margin:0 auto;padding:0 32px 28px;}
+  .cargos-explicados-intro{font-size:13.5px;color:var(--ink-soft);line-height:1.6;max-width:760px;margin:0 0 18px;}
+  .cargos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+  .cargo-card{background:var(--tela);border:1px solid var(--line);border-radius:var(--radius);padding:16px 16px 14px;}
+  .cargo-card h3{font-size:14.5px;margin-bottom:8px;}
+  .cargo-card .cargo-card-funcao{font-size:13px;line-height:1.55;color:var(--tinta);margin:0 0 12px;}
+  .cargo-card dl{margin:0;font-size:12.5px;}
+  .cargo-card dl>div{padding:8px 0;border-top:1px solid var(--line);}
+  .cargo-card dl>div:first-child{border-top:none;padding-top:0;}
+  .cargo-card dt{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--ink-soft);margin-bottom:4px;}
+  .cargo-card dd{margin:0;color:var(--tinta);line-height:1.5;}
+  @media(max-width:760px){.cargos-explicados-toggle{padding:14px 16px;} .cargos-explicados-conteudo{padding:0 16px 22px;}}
+
   .urna-estado-atual{display:none;max-width:420px;margin:0 auto;align-items:center;justify-content:center;gap:10px;
     font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#B9D3C2;}
   .urna-estado-atual.visivel{display:flex;}
@@ -306,6 +327,58 @@
     </div>
   </div>
 </header>
+
+<section class="cargos-explicados">
+  <button class="cargos-explicados-toggle" id="toggleCargosExplicados" aria-expanded="false" aria-controls="cargosExplicadosConteudo">
+    📖 Como funciona cada cargo — o que faz, quanto dura o mandato e as regras de reeleição
+    <span class="seta">▼</span>
+  </button>
+  <div class="cargos-explicados-conteudo" id="cargosExplicadosConteudo" hidden>
+    <p class="cargos-explicados-intro">Esta eleição escolhe 5 cargos diferentes ao mesmo tempo — você vota em um candidato para cada um, e eles não concorrem entre si. Cada cargo tem atribuições e regras de mandato próprias, definidas pela Constituição Federal. Resumo de cada um:</p>
+    <div class="cargos-grid">
+      <article class="cargo-card">
+        <h3>Presidente da República</h3>
+        <p class="cargo-card-funcao">Chefe do Poder Executivo federal: comanda a administração pública do país, representa o Brasil no exterior, sanciona ou veta leis aprovadas pelo Congresso, nomeia ministros e é o comandante supremo das Forças Armadas.</p>
+        <dl>
+          <div><dt>Duração do mandato</dt><dd>4 anos.</dd></div>
+          <div><dt>Reeleição</dt><dd>Pode concorrer à reeleição uma única vez, para o período seguinte (máximo de 2 mandatos consecutivos — art. 14, §5º da Constituição). Depois disso, só pode voltar a disputar o mesmo cargo após ficar pelo menos um mandato de fora.</dd></div>
+        </dl>
+      </article>
+      <article class="cargo-card">
+        <h3>Governador</h3>
+        <p class="cargo-card-funcao">Chefe do Poder Executivo estadual: administra o estado, propõe e sanciona leis estaduais, comanda a polícia militar e civil, e decide investimentos estaduais em saúde, educação e infraestrutura.</p>
+        <dl>
+          <div><dt>Duração do mandato</dt><dd>4 anos.</dd></div>
+          <div><dt>Reeleição</dt><dd>Mesma regra do Presidente: só 1 reeleição consecutiva permitida (art. 14, §5º da Constituição).</dd></div>
+        </dl>
+      </article>
+      <article class="cargo-card">
+        <h3>Senador</h3>
+        <p class="cargo-card-funcao">Representa o estado no Senado Federal: vota leis federais, aprova indicações para o STF e outras autoridades, e julga processos de impeachment. Cada estado tem 3 senadores.</p>
+        <dl>
+          <div><dt>Duração do mandato</dt><dd>8 anos — o dobro dos demais cargos desta eleição. As 3 vagas de cada estado não são renovadas juntas: a cada eleição, só uma parte delas está em disputa (nesta eleição, 2 das 3 vagas por estado).</dd></div>
+          <div><dt>Reeleição</dt><dd>Sem limite de mandatos consecutivos — regra geral do Poder Legislativo, diferente do Executivo.</dd></div>
+        </dl>
+      </article>
+      <article class="cargo-card">
+        <h3>Deputado Federal</h3>
+        <p class="cargo-card-funcao">Representa o estado na Câmara dos Deputados: propõe e vota leis federais (inclusive o orçamento da União) e fiscaliza o governo federal.</p>
+        <dl>
+          <div><dt>Duração do mandato</dt><dd>4 anos.</dd></div>
+          <div><dt>Reeleição</dt><dd>Sem limite de mandatos consecutivos.</dd></div>
+        </dl>
+      </article>
+      <article class="cargo-card">
+        <h3>Deputado Estadual</h3>
+        <p class="cargo-card-funcao">Vota leis dentro do próprio estado, na Assembleia Legislativa: define o orçamento estadual e fiscaliza o governador — não tem poder sobre leis federais.</p>
+        <dl>
+          <div><dt>Duração do mandato</dt><dd>4 anos.</dd></div>
+          <div><dt>Reeleição</dt><dd>Sem limite de mandatos consecutivos.</dd></div>
+        </dl>
+      </article>
+    </div>
+  </div>
+</section>
 
 <div id="urnaView">
   <div id="urnaResultado"></div>
@@ -651,6 +724,13 @@ function switchMode(mode){
   }
 }
 
+document.getElementById('toggleCargosExplicados').addEventListener('click', () => {
+  const btn = document.getElementById('toggleCargosExplicados');
+  const conteudo = document.getElementById('cargosExplicadosConteudo');
+  const aberto = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', String(!aberto));
+  conteudo.hidden = aberto;
+});
 document.getElementById('verExplorar').addEventListener('click', () => switchMode('explorar'));
 document.getElementById('voltarUrna').addEventListener('click', () => switchMode('urna'));
 document.getElementById('urnaBtn').addEventListener('click', () => {
